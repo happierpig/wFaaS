@@ -1,20 +1,20 @@
 # recommend not to use the alpine one, it lacks lots of dependencies
 # the slim one ocuppies about 2x space compared to alpine one
 # FROM python:3.7-alpine
-FROM python:3.7-slim
-COPY pip.conf /etc/pip.conf
+FROM rust:1.64
 
 # fulfill the structure requirement of proxy
-RUN mkdir /proxy
+RUN mkdir /src
 
 # copy libs
-COPY proxy.py /proxy/proxy.py
-COPY main.wat /proxy/main.wat
+COPY proxy.rs /src/main.rs
+COPY main.wat /src/main.wat
+COPY Cargo.toml /Cargo.toml
 
-WORKDIR /proxy
+WORKDIR /
 
-# proxy server runs under port 5000
-EXPOSE 5000
+# proxy server runs under port 8000
+EXPOSE 8000
 
 # for alpine base only
 # RUN apk update && \
@@ -22,8 +22,6 @@ EXPOSE 5000
 #     pip install --no-cache-dir gevent flask && \
 #     apk del .build-deps
 
-RUN apt-get clean
-RUN apt-get update
-RUN pip3 install --no-cache-dir gevent flask wasmtime
+RUN cargo build
 
-CMD [ "python3", "/proxy/proxy.py" ]
+CMD cargo run

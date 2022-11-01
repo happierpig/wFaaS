@@ -4,7 +4,7 @@ import gevent
 from container import Container
 
 client = docker.from_env()
-a = Container.create(client,'faas',2000,'exec')
+a = Container.create(client,'faas',30000,'exec')
 
 if a.init('gcd') :
     print("Call init success.")

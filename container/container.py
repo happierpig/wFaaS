@@ -14,7 +14,7 @@ class Container:
                                           init=True,
                                           cpuset_cpus='0-2',
                                           cpu_quota=20000,
-                                          ports={'5000/tcp': str(port)},
+                                          ports={'8000/tcp': str(port)},
                                           labels=['workflow'])
         res = cls(container, port, attr, max_wasm)
         res.wait_start()
@@ -41,11 +41,12 @@ class Container:
         while True:
             try:
                 r = requests.get(base_url.format(self.port, 'status'))
+                print(r)
                 if r.status_code == 200:
                     break
             except Exception:
                 pass
-            gevent.sleep(0.05)
+            gevent.sleep(0.5)
 
     # send a request to container and wait for result
     def send_request(self, data = {}):
@@ -56,7 +57,7 @@ class Container:
 
         r = requests.post(base_url.format(self.port, 'run'), json=data)
         self.lasttime = time.time()
-        
+
         self.b.acquire()
         self.num_exec -= 1
         self.b.release()
