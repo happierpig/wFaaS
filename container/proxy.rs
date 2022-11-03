@@ -1,13 +1,12 @@
 #[macro_use] extern crate rocket;
 extern crate rand;
-use rand::Rng;
 use rocket::serde::json::{Json, Value, json};
 use wasmtime::*;
 use anyhow::Result;
 use std::{thread, time};
-use time::Instant;
 
-const defaultFile : &str = "main.wat";
+use nix::unistd::{fork, ForkResult};
+
 // static mut functionName : String = String::new(); //todo: Can't deal with the global variable 
 
 
@@ -18,8 +17,11 @@ const defaultFile : &str = "main.wat";
 // }
 
 fn run() -> Result<()>{
+    let ten_mins = time::Duration::from_secs(5);
+    thread::sleep(ten_mins);
+
     let engine = Engine::default();
-    let module = Module::from_file(&engine, defaultFile)?;
+    let module = Module::from_file(&engine, "main.wat")?;
     let mut store = Store::new(&engine, ());
     let instance = Instance::new(&mut store, &module, &[])?;
     let answer = instance.get_func(&mut store, "gcd")
@@ -40,13 +42,36 @@ fn run_status() -> Value {
     json!({"status" : "ok"})
 }
 
+// todo : 
+// 1.Pass PID outside to cGroup
+// 2.Reuse the process for resource control
+// 3.Use something else to alter fork()
+
 #[get("/run")]
 fn run_code() -> Value{
-    let start = Instant::now();
-    let handle = thread::spawn(||{run()});
-    handle.join().unwrap();
-    let useTime = start.elapsed().as_secs_f32();
-    json!({"last" : useTime})
+    // let start = Instant::now();
+    // let handle = thread::spawn(||{run()});
+    // handle.join().unwrap();
+    // let useTime = start.elapsed().as_secs_f32();
+    // json!({"last" : useTime})
+    match fork(){
+        Ok(ForkResult::Parent{child, ..}) => {
+            println!("Proxy forks a new process with pid {}", child);
+            json!({"pid" : child.as_raw()})
+        }
+        Ok(ForkResult::Child) => {
+            let t = run();
+            match t{
+                Ok(_)=>{println!("Call run success");}
+                Err(e)=>{println!("Call run failed : {e:?}")}
+            }
+            json!({"last" : 3})
+        }
+        Err(_) => {
+            println!("fork error");
+            json!({"last" : -1})
+        }
+    }
 }
 
 #[launch]
