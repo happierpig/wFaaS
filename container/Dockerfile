@@ -24,4 +24,4 @@ EXPOSE 8000
 
 RUN cargo build
 
-CMD cargo run
+CMD ["cargo", "run"]

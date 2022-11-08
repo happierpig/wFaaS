@@ -3,7 +3,7 @@ import time
 import gevent
 from gevent.lock import BoundedSemaphore
 
-base_url = 'http://127.0.0.1:{}/{}'
+base_url = 'http://0.0.0.0:{}/{}'
 
 class Container:
     # create a new container and return the wrapper
@@ -35,6 +35,8 @@ class Container:
         self.b = BoundedSemaphore()
         self.max_wasm = max_wasm
         self.num_exec = 0
+        
+        self.cgroup_pool = []
 
     # wait for the container cold start // Q:指的是容器初始化并且启动了Flask？
     def wait_start(self):
@@ -55,7 +57,7 @@ class Container:
         self.num_exec += 1
         self.b.release()
 
-        r = requests.post(base_url.format(self.port, 'run'), json=data)
+        r = requests.get(base_url.format(self.port, 'run'))
         self.lasttime = time.time()
 
         self.b.acquire()
@@ -68,7 +70,7 @@ class Container:
     # initialize the container
     def init(self,function_name):
         data = {'function': function_name }
-        r = requests.post(base_url.format(self.port, 'init'), json=data)
+        r = requests.get(base_url.format(self.port, 'init'))
         self.lasttime = time.time()
         return r.status_code == 200
 

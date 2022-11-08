@@ -10,3 +10,4 @@ rocket = { version = "0.5.0-rc.2", features = ["json"] }
 rand = "0.8.5"
 wasmtime = "1.0.0"
 anyhow = "1.0"
+nix = "0.16.1"

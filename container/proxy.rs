@@ -44,7 +44,7 @@ fn run_status() -> Value {
 
 // todo : 
 // 1.Pass PID outside to cGroup
-// 2.Reuse the process for resource control
+// 2.Reuse the process for resource control (fexecve)
 // 3.Use something else to alter fork()
 
 #[get("/run")]
