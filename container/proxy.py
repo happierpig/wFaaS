@@ -4,8 +4,8 @@ import os
 import time
 from flask import Flask, request
 from gevent.pywsgi import WSGIServer
-from wasmtime import Store, Module, Instance, Config
-from multiprocessing import Process
+from wasmtime import Store, Module, Instance
+from multiprocessing import Process, Pool
 
 
 
@@ -14,35 +14,35 @@ work_dir = '/proxy'
 
 class Runner:
     def __init__(self):
-        self.code = None
         self.function = None
         self.ctx = {}
+        self.runners = None
 
-    def init(self, function):
+    def init(self, function, concurrency):
         print('init...')
 
         # update function status
         self.function = function
-
-        os.chdir(work_dir)
-
-        # compile first
-        filename = os.path.join(work_dir, default_file)
-        with open(filename, 'r') as f:
-            self.code = f.read()
-
-        print('init finished...')
+        # Init a process pool
+        print(concurrency)
+        self.runners = Pool(int(concurrency))
+        # os.chdir(work_dir)
+        pidList = []
+        multipleResult = [self.runners.apply_async(os.getpid, ()) for i in range(concurrency)]
+        pidList.append(res.get(timeout=1) for res in multipleResult)
+        print('init finished..., And the pid list is : ', pidList)
+        return pidList
 
     def run(self):
         self.ctx = {'function': self.function}
 
         # run function
         store = Store()
-        module = Module.from_file(store.engine, 'main.wat')
+        module = Module.from_file(store.engine, default_file)
         instance = Instance(store, module, [])
         func = instance.exports(store)[self.function]
         out = func(store, 27, 6)
-        print("This process pid : %d, and result is :%d",os.getpid(),out)
+        print("This process pid : %d, and result is :%d", os.getpid(),out)
         return out
 
 #todo
@@ -67,11 +67,13 @@ def init():
     proxy.status = 'init'
 
     inp = request.get_json(force=True, silent=True)
-    runner.init(inp['function'])
+    pidList = runner.init(inp['function'],inp['concurrency'])
 
-    proxy.status = 'ok'
+    res = {
+        "pid_list": pidList
+    }
 
-    return ('OK', 200)
+    return res
 
 
 @proxy.route('/run', methods=['POST'])
@@ -106,5 +108,5 @@ def run():
 
 
 if __name__ == '__main__':
-    server = WSGIServer(('0.0.0.0', 5000), proxy)
+    server = WSGIServer(('127.0.0.1', 24333), proxy)
     server.serve_forever()

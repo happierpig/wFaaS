@@ -3,20 +3,20 @@ import time
 import gevent
 from gevent.lock import BoundedSemaphore
 
-base_url = 'http://0.0.0.0:{}/{}'
+base_url = 'http://127.0.0.1:{}/{}'
 
 class Container:
     # create a new container and return the wrapper
     @classmethod
-    def create(cls, client, image_name, port, attr, max_wasm = 5):
+    def create(cls, client, image_name, port, attr, concurrency = 5):
         container = client.containers.run(image_name,
                                           detach=True,
                                           init=True,
                                           cpuset_cpus='0-2',
                                           cpu_quota=20000,
-                                          ports={'8000/tcp': str(port)},
+                                          ports={'23333/tcp': str(port)},
                                           labels=['workflow'])
-        res = cls(container, port, attr, max_wasm)
+        res = cls(container, port, attr, concurrency)
         res.wait_start()
         return res
 
@@ -27,17 +27,13 @@ class Container:
         container = client.containers.get(container_id)
         return cls(container, port, attr)
 
-    def __init__(self, container, port, attr, max_wasm):
+    def __init__(self, container, port, attr, concurrency):
         self.container = container
         self.port = port
         self.attr = attr
         self.lasttime = time.time()
-        self.b = BoundedSemaphore()
-        self.max_wasm = max_wasm
-        self.num_exec = 0
+        self.concurrency = concurrency
         
-        self.cgroup_pool = []
-
     # wait for the container cold start // Q:指的是容器初始化并且启动了Flask？
     def wait_start(self):
         while True:
@@ -53,27 +49,26 @@ class Container:
     # send a request to container and wait for result
     def send_request(self, data = {}):
 
-        self.b.acquire()
-        self.num_exec += 1
-        self.b.release()
 
-        r = requests.get(base_url.format(self.port, 'run'))
+        r = requests.post(base_url.format(self.port, 'run'), json=data)
         self.lasttime = time.time()
-
-        self.b.acquire()
-        self.num_exec -= 1
-        self.b.release()
 
         print(r.json())
         return r.json()
 
     # initialize the container
     def init(self,function_name):
-        data = {'function': function_name }
-        r = requests.get(base_url.format(self.port, 'init'))
+        data = {'function': function_name, 'concurrency': self.concurrency}
+        r = requests.post(base_url.format(self.port, 'init'), json=data)
         self.lasttime = time.time()
+        print(r)
+        pidList = r.json['pid_list']
+
         return r.status_code == 200
 
     # kill and remove the container
+    def cgroup_init(pidList):
+        
+
     def destroy(self):
         self.container.remove(force=True)
