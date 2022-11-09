@@ -7,7 +7,7 @@ from container import Container
 base_url = 'http://127.0.0.1:{}/{}'
 data = {'function': 'test', 'concurrency': 4}
 r = requests.post(base_url.format(24333, 'init'), json=data)
-print()
+print(r)
 exit(0)
 
 client = docker.from_env()
