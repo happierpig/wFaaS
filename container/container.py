@@ -1,18 +1,17 @@
 import requests
 import time
 import gevent
-from gevent.lock import BoundedSemaphore
 
 base_url = 'http://127.0.0.1:{}/{}'
 
 class Container:
     # create a new container and return the wrapper
     @classmethod
-    def create(cls, client, image_name, port, attr, concurrency = 5):
+    def create(cls, client, image_name, port, attr, concurrency = 3):
         container = client.containers.run(image_name,
                                           detach=True,
                                           init=True,
-                                          cpuset_cpus='0-2',
+                                          cpuset_cpus='0-3',
                                           cpu_quota=20000,
                                           ports={'23333/tcp': str(port)},
                                           labels=['workflow'])
@@ -44,7 +43,7 @@ class Container:
                     break
             except Exception:
                 pass
-            gevent.sleep(0.5)
+            gevent.sleep(0.005)
 
     # send a request to container and wait for result
     def send_request(self, data = {}):
@@ -67,7 +66,7 @@ class Container:
         return r.status_code == 200
 
     # kill and remove the container
-    def cgroup_init(pidList):
+    # def cgroup_init(pidList):
         
 
     def destroy(self):

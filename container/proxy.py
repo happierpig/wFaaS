@@ -25,7 +25,8 @@ class Runner:
         self.function = function
         # Init a process pool
         print(concurrency)
-        self.runners = Pool(int(concurrency))
+        self.runners = Pool(concurrency)
+        print("Process Pool Init Successfully.")
         # os.chdir(work_dir)
         pidList = []
         multipleResult = [self.runners.apply_async(os.getpid, ()) for i in range(concurrency)]
@@ -108,5 +109,6 @@ def run():
 
 
 if __name__ == '__main__':
-    server = WSGIServer(('127.0.0.1', 24333), proxy)
+    print("Proxy Start")
+    server = WSGIServer(('0.0.0.0', 23333), proxy)
     server.serve_forever()
