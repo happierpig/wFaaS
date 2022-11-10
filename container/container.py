@@ -57,12 +57,11 @@ class Container:
 
     # initialize the container
     def init(self,function_name):
-        data = {'function': function_name, 'concurrency': self.concurrency}
+        data = {'function': function_name}
         r = requests.post(base_url.format(self.port, 'init'), json=data)
         self.lasttime = time.time()
         print(r)
         pidList = r.json['pid_list']
-
         return r.status_code == 200
 
     # kill and remove the container

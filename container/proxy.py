@@ -17,19 +17,22 @@ class Runner:
         self.function = None
         self.ctx = {}
         self.runners = None
+        self.concurrency = 4 # Maybe stored in the configuration
 
-    def init(self, function, concurrency):
+    def init(self, function):
         print('init...')
 
         # update function status
         self.function = function
+
         # Init a process pool
-        print(concurrency)
-        self.runners = Pool(concurrency)
-        print("Process Pool Init Successfully.")
+        # print(concurrency)
+        # self.runners = Pool(concurrency)
+        # print("Process Pool Init Successfully.")
         # os.chdir(work_dir)
+
         pidList = []
-        multipleResult = [self.runners.apply_async(os.getpid, ()) for i in range(concurrency)]
+        multipleResult = [self.runners.apply_async(os.getpid, ()) for i in range(self.concurrency)]
         pidList.append(res.get(timeout=1) for res in multipleResult)
         print('init finished..., And the pid list is : ', pidList)
         return pidList
@@ -68,7 +71,7 @@ def init():
     proxy.status = 'init'
 
     inp = request.get_json(force=True, silent=True)
-    pidList = runner.init(inp['function'],inp['concurrency'])
+    pidList = runner.init(inp['function'])
 
     res = {
         "pid_list": pidList
@@ -109,6 +112,8 @@ def run():
 
 
 if __name__ == '__main__':
-    print("Proxy Start")
+    print("Proxy Start, and worker concurrecy : ", runner.concurrency)
+    runner.runners = Pool(runner.concurrency)
+    print("Init Process Pool Success")
     server = WSGIServer(('0.0.0.0', 23333), proxy)
     server.serve_forever()
