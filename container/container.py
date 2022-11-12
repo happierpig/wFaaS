@@ -32,6 +32,7 @@ class Container:
         self.attr = attr
         self.lasttime = time.time()
         self.concurrency = concurrency
+        self.pidList = None
         
     # wait for the container cold start // Q:指的是容器初始化并且启动了Flask？
     def wait_start(self):
@@ -61,7 +62,7 @@ class Container:
         r = requests.post(base_url.format(self.port, 'init'), json=data)
         self.lasttime = time.time()
         print(r)
-        pidList = r.json['pid_list']
+        self.pidList = r.json()['pid_list']
         return r.status_code == 200
 
     # kill and remove the container

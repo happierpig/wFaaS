@@ -5,8 +5,7 @@ import time
 from flask import Flask, request
 from gevent.pywsgi import WSGIServer
 from wasmtime import Store, Module, Instance
-from multiprocessing import Process, Pool
-
+from concurrent.futures import ProcessPoolExecutor
 
 
 default_file = 'main.wat'
@@ -24,16 +23,10 @@ class Runner:
 
         # update function status
         self.function = function
-
-        # Init a process pool
-        # print(concurrency)
-        # self.runners = Pool(concurrency)
-        # print("Process Pool Init Successfully.")
-        # os.chdir(work_dir)
-
         pidList = []
-        multipleResult = [self.runners.apply_async(os.getpid, ()) for i in range(self.concurrency)]
-        pidList.append(res.get(timeout=1) for res in multipleResult)
+        multipleResult = [self.runners.submit(os.getpid,) for i in range(self.concurrency)]
+        print("Pid Task dispatched to runners.")
+        pidList = [res.result(timeout=3) for res in multipleResult]
         print('init finished..., And the pid list is : ', pidList)
         return pidList
 
@@ -50,10 +43,10 @@ class Runner:
         return out
 
 #todo
+runner = Runner()
 proxy = Flask(__name__)
 proxy.status = 'new'
 proxy.debug = False
-runner = Runner()
 
 
 @proxy.route('/status', methods=['GET'])
@@ -88,9 +81,7 @@ def run():
 
     # record the execution time
     start = time.time()
-    p = Process(target=runner.run)
-    p.start()
-    p.join()
+
     end = time.time()
 
     res = {
@@ -113,7 +104,7 @@ def run():
 
 if __name__ == '__main__':
     print("Proxy Start, and worker concurrecy : ", runner.concurrency)
-    runner.runners = Pool(runner.concurrency)
+    runner.runners = ProcessPoolExecutor(max_workers = runner.concurrency)
     print("Init Process Pool Success")
     server = WSGIServer(('0.0.0.0', 23333), proxy)
     server.serve_forever()

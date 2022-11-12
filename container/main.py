@@ -16,5 +16,7 @@ client = docker.from_env()
 a = Container.create(client,'faas',23343,'exec')
 
 a.init("test")
+a.init("test")
+a.init("test")
 a.destroy()
 exit(0)
