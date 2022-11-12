@@ -6,6 +6,7 @@ from flask import Flask, request
 from gevent.pywsgi import WSGIServer
 from wasmtime import Store, Module, Instance
 from concurrent.futures import ProcessPoolExecutor
+import random
 
 
 default_file = 'main.wat'
@@ -30,17 +31,22 @@ class Runner:
         print('init finished..., And the pid list is : ', pidList)
         return pidList
 
-    def run(self):
-        self.ctx = {'function': self.function}
+# Concurrent Running Need Non-class function(Maybe for runners in runner)
+def run(self):
+    self.ctx = {'function': self.function}
+    # run function
+    store = Store()
+    module = Module.from_file(store.engine, default_file)
+    instance = Instance(store, module, [])
+    func = instance.exports(store)[self.function]
+    out = func(store, 27, 6)
+    print("This process pid : %d, and result is :%d", os.getpid(),out)
+    return out
 
-        # run function
-        store = Store()
-        module = Module.from_file(store.engine, default_file)
-        instance = Instance(store, module, [])
-        func = instance.exports(store)[self.function]
-        out = func(store, 27, 6)
-        print("This process pid : %d, and result is :%d", os.getpid(),out)
-        return out
+def run_test():
+    sleepTime = random.randint(1,10)
+    time.sleep(sleepTime)
+    return sleepTime
 
 #todo
 runner = Runner()
@@ -81,14 +87,16 @@ def run():
 
     # record the execution time
     start = time.time()
-
+    runnerOut = runner.runners.submit(run_test,)
+    retVal = runnerOut.result()
     end = time.time()
 
     res = {
         "start_time": start,
         "end_time": end,
         "duration": end - start,
-        "inp": inp
+        "inp": inp,
+        "ret": retVal
     }
 
     proxy.status = 'ok'

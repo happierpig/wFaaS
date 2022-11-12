@@ -13,6 +13,7 @@ class Container:
                                           init=True,
                                           cpuset_cpus='0-3',
                                           cpu_quota=20000,
+                                          mem_limit='128m',
                                           ports={'23333/tcp': str(port)},
                                           labels=['workflow'])
         res = cls(container, port, attr, concurrency)
@@ -63,6 +64,7 @@ class Container:
         self.lasttime = time.time()
         print(r)
         self.pidList = r.json()['pid_list']
+        print(self.pidList)
         return r.status_code == 200
 
     # kill and remove the container

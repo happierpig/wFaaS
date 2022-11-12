@@ -1,6 +1,8 @@
 import docker
-import requests
 import gevent
+from gevent import monkey
+monkey.patch_all()
+import time
 from container import Container
 
 # base_url = 'http://127.0.0.1:{}/{}'
@@ -16,7 +18,12 @@ client = docker.from_env()
 a = Container.create(client,'faas',23343,'exec')
 
 a.init("test")
-a.init("test")
-a.init("test")
+jobs = []
+for i in range(10):
+    print("Remote call : ",i)
+    jobs.append(gevent.spawn(a.send_request))
+gevent.joinall(jobs)
+
+time.sleep(30)
 a.destroy()
 exit(0)
