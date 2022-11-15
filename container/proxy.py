@@ -117,7 +117,6 @@ def occupy_func(con):
         outputData = None
         con.send(outputData)
 
-#todo
 runner = Runner()
 proxy = Flask(__name__)
 proxy.status = 'new'
@@ -158,22 +157,13 @@ def run():
     start = time.time()
 
     end = time.time()
-
     res = {
         "start_time": start,
         "end_time": end,
         "duration": end - start,
         "inp": inp
     }
-
     proxy.status = 'ok'
-
-    
-    # s = time.time()
-    # time.sleep(random.random() * 5)
-    # e = time.time()
-    # print("Cost time : ",e - s)
-    # res = {"res":e-s}
     return res
 
 
