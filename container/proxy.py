@@ -1,5 +1,3 @@
-from gevent import monkey
-monkey.patch_all()
 import os
 import time
 from flask import Flask, request
@@ -16,7 +14,7 @@ pCtx = None # Used to designate the fork manner into 'spawn'
 
 class runnerUnit:
     def __init__(self):
-        (self.hostCon, kiteCon) = mp.Pipe()
+        (self.hostCon, kiteCon) = mp.Pipe(duplex=True)
         self.worker = pCtx.Process(target=occupy_func, args=(kiteCon,))
         self.worker.start() # not use Process.run()
         self.threadLock = BoundedSemaphore(1)
@@ -28,8 +26,7 @@ class runnerUnit:
     def tryOccupy(self):    # Simulate a atomic operation in Thread level
         self.threadLock.acquire()
         flag = self.idle
-        if flag == True:
-            self.idle = False
+        self.idle = False
         self.threadLock.release()
         return flag == True
 
@@ -54,8 +51,10 @@ class runnerPool:
         self.aliveNum = _concurrency
         self.runnerList = [runnerUnit() for i in range(self.defaultNum)]
         self.threadLock = BoundedSemaphore(1)
-        return [unit.getvPid() for unit in self.runnerList] # return pidList for Control Group
 
+    def getPids(self):
+        return [unit.getvPid() for unit in self.runnerList]
+    
     def dispatch_request(self, inputData):
         # todo : some schedule stragegy
         # Now : try all possibility
@@ -101,17 +100,15 @@ class Runner:
         self.function = None
         self.ctx = {}
         self.runners = None
-        self.concurrency = 4 # Maybe stored in the configuration
+        self.concurrency = 40
 
-    def init(self, function):
+    def init(self, _function, _concurrency):
         print('init...')
-        p = pCtx.Process(target=occupy_func)
-        p.start()
-        ret = p.pid
-        p.join()
-        return ret
-
-        # update function status
+        self.function = _function
+        self.concurrency = _concurrency
+        self.runners = runnerPool(self.concurrency)
+        print('init finish...')
+        return self.runners.getPids()
 
 def occupy_func(con):
     while(True):
@@ -142,7 +139,7 @@ def init():
     proxy.status = 'init'
 
     inp = request.get_json(force=True, silent=True)
-    pidList = runner.init(inp['function'])
+    pidList = runner.init(inp['function'], inp['concurrency'])
 
     res = {
         "pid_list": pidList
@@ -182,6 +179,6 @@ def run():
 
 if __name__ == '__main__':
     pCtx = mp.get_context('spawn')
-    print("Init Process Pool Success")
-    server = WSGIServer(('0.0.0.0', 23333), proxy)
+    print("Init Process Context Successfully and Proxy starts.")
+    server = WSGIServer(('127.0.0.1', 23333), proxy)
     server.serve_forever()
