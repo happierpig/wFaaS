@@ -4,13 +4,98 @@ import os
 import time
 from flask import Flask, request
 from gevent.pywsgi import WSGIServer
+from gevent.lock import BoundedSemaphore
 from wasmtime import Store, Module, Instance
-from concurrent.futures import ProcessPoolExecutor
-import random
-
+import multiprocessing as mp
 
 default_file = 'main.wat'
 work_dir = '/proxy'
+
+# Functions support process pool
+pCtx = None # Used to designate the fork manner into 'spawn'
+
+class runnerUnit:
+    def __init__(self):
+        (self.hostCon, kiteCon) = mp.Pipe()
+        self.worker = pCtx.Process(target=occupy_func, args=(kiteCon,))
+        self.worker.start() # not use Process.run()
+        self.threadLock = BoundedSemaphore(1)
+        self.idle = True
+
+    def getvPid(self):
+        return self.worker.pid
+
+    def tryOccupy(self):    # Simulate a atomic operation in Thread level
+        self.threadLock.acquire()
+        flag = self.idle
+        if flag == True:
+            self.idle = False
+        self.threadLock.release()
+        return flag == True
+
+    def runCode(self, data): # Must be called after occupy
+        self.hostCon.send(data) # wake up the sleepy process
+        outputVal = self.hostCon.recv() # block it again
+        self.threadLock.acquire()
+        self.idle = True
+        self.threadLock.release()
+        return outputVal
+    
+    def destroy(self):
+        vPid = self.getvPid()
+        self.worker.terminate()
+        self.worker.close() # Recycle the resources of The Process
+        self.hostCon.close()
+        return vPid
+
+class runnerPool:
+    def __init__(self, _concurrency):
+        self.defaultNum = _concurrency
+        self.aliveNum = _concurrency
+        self.runnerList = [runnerUnit() for i in range(self.defaultNum)]
+        self.threadLock = BoundedSemaphore(1)
+        return [unit.getvPid() for unit in self.runnerList] # return pidList for Control Group
+
+    def dispatch_request(self, inputData):
+        # todo : some schedule stragegy
+        # Now : try all possibility
+        flag = False
+        outputVal = None
+        candidate = None
+        self.threadLock.acquire() # avoiding add/remove thread corrupt
+        for i in range(self.aliveNum):
+            candidate = self.runnerList[i]
+            if candidate.tryOccupy() == True:
+                flag = True
+                break
+        self.threadLock.release()
+        if flag == True:
+            outputVal = candidate.runCode(inputData)
+        return flag, outputVal
+    
+    def addRunner(self):
+        newRunner = runnerUnit()
+        self.threadLock.acquire()
+        self.runnerList.append(newRunner)
+        self.aliveNum += 1
+        self.threadLock.release()
+        return newRunner.getvPid() # For cGroup
+
+    def rmRunner(self):
+        # todo : design a remove stragegy 
+        # now it always rm the lastest one
+        self.threadLock.acquire()
+        victimRunner = self.runnerList[self.aliveNum-1]
+        vPid = victimRunner.getvPid()
+        while(True):
+            if victimRunner.tryOccupy() == True:
+                break
+        victimRunner.destroy()
+        self.aliveNum -= 1
+        self.runnerList.remove(victimRunner)
+        self.threadLock.release()
+        return vPid # For cGroup
+
 
 class Runner:
     def __init__(self):
@@ -21,32 +106,20 @@ class Runner:
 
     def init(self, function):
         print('init...')
+        p = pCtx.Process(target=occupy_func)
+        p.start()
+        ret = p.pid
+        p.join()
+        return ret
 
         # update function status
-        self.function = function
-        pidList = []
-        multipleResult = [self.runners.submit(os.getpid,) for i in range(self.concurrency)]
-        print("Pid Task dispatched to runners.")
-        pidList = [res.result(timeout=3) for res in multipleResult]
-        print('init finished..., And the pid list is : ', pidList)
-        return pidList
 
-# Concurrent Running Need Non-class function(Maybe for runners in runner)
-def run(self):
-    self.ctx = {'function': self.function}
-    # run function
-    store = Store()
-    module = Module.from_file(store.engine, default_file)
-    instance = Instance(store, module, [])
-    func = instance.exports(store)[self.function]
-    out = func(store, 27, 6)
-    print("This process pid : %d, and result is :%d", os.getpid(),out)
-    return out
-
-def run_test():
-    sleepTime = random.randint(1,10)
-    time.sleep(sleepTime)
-    return sleepTime
+def occupy_func(con):
+    while(True):
+        inputData = con.recv() # Blocking for Idle
+        # todo : Sent into wasm worker
+        outputData = None
+        con.send(outputData)
 
 #todo
 runner = Runner()
@@ -87,16 +160,14 @@ def run():
 
     # record the execution time
     start = time.time()
-    runnerOut = runner.runners.submit(run_test,)
-    retVal = runnerOut.result()
+
     end = time.time()
 
     res = {
         "start_time": start,
         "end_time": end,
         "duration": end - start,
-        "inp": inp,
-        "ret": retVal
+        "inp": inp
     }
 
     proxy.status = 'ok'
@@ -111,8 +182,7 @@ def run():
 
 
 if __name__ == '__main__':
-    print("Proxy Start, and worker concurrecy : ", runner.concurrency)
-    runner.runners = ProcessPoolExecutor(max_workers = runner.concurrency)
+    pCtx = mp.get_context('spawn')
     print("Init Process Pool Success")
     server = WSGIServer(('0.0.0.0', 23333), proxy)
     server.serve_forever()
