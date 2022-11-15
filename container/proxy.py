@@ -86,11 +86,10 @@ class runnerPool:
         # now it always rm the lastest one
         self.threadLock.acquire()
         victimRunner = self.runnerList[self.aliveNum-1]
-        vPid = victimRunner.getvPid()
         while(True):
             if victimRunner.tryOccupy() == True:
                 break
-        victimRunner.destroy()
+        vPid = victimRunner.destroy()
         self.aliveNum -= 1
         self.runnerList.remove(victimRunner)
         self.threadLock.release()
