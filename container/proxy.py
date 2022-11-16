@@ -1,8 +1,7 @@
 import os
 import time
 from flask import Flask, request
-from gevent.pywsgi import WSGIServer
-from gevent.lock import BoundedSemaphore
+import threading
 from wasmtime import Store, Module, Instance
 import multiprocessing as mp
 
@@ -17,7 +16,7 @@ class runnerUnit:
         (self.hostCon, kiteCon) = mp.Pipe(duplex=True)
         self.worker = pCtx.Process(target=occupy_func, args=(kiteCon,))
         self.worker.start() # not use Process.run()
-        self.threadLock = BoundedSemaphore(1)
+        self.threadLock = threading.Lock()
         self.idle = True
 
     def getvPid(self):
@@ -50,7 +49,7 @@ class runnerPool:
         self.defaultNum = _concurrency
         self.aliveNum = _concurrency
         self.runnerList = [runnerUnit() for i in range(self.defaultNum)]
-        self.threadLock = BoundedSemaphore(1)
+        self.threadLock = threading.Lock()
 
     def getPids(self):
         return [unit.getvPid() for unit in self.runnerList]
@@ -110,11 +109,19 @@ class Runner:
         print('init finish...')
         return self.runners.getPids()
 
+    def run(self, _inputData):
+        flag, outputData = self.runners.dispatch_request(_inputData)
+        return flag, outputData
+
 def occupy_func(con):
     while(True):
         inputData = con.recv() # Blocking for Idle
         # todo : Sent into wasm worker
-        outputData = None
+        time.sleep(2)
+        outputData = {
+            "test": 1,
+            "author": 'happypig'
+            }
         con.send(outputData)
 
 runner = Runner()
@@ -152,16 +159,20 @@ def run():
     proxy.status = 'run'
 
     inp = request.get_json(force=True, silent=True)
+    inputData = inp['input']
 
     # record the execution time
     start = time.time()
-
+    flag, outputData = runner.run(inputData)
     end = time.time()
+
     res = {
         "start_time": start,
         "end_time": end,
         "duration": end - start,
-        "inp": inp
+        "inp": inp,
+        "output": outputData,
+        "executed": flag
     }
     proxy.status = 'ok'
     return res
@@ -170,5 +181,4 @@ def run():
 if __name__ == '__main__':
     pCtx = mp.get_context('spawn')
     print("Init Process Context Successfully and Proxy starts.")
-    server = WSGIServer(('127.0.0.1', 23333), proxy)
-    server.serve_forever()
+    proxy.run(host='127.0.0.1', port=23333, debug=False, threaded = True)
