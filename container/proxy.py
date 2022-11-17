@@ -7,10 +7,9 @@ import multiprocessing as mp
 
 default_file = 'main.wat'
 work_dir = '/proxy'
-
-# Functions support process pool
 pCtx = None # Used to designate the fork manner into 'spawn'
 
+# Wrapper Class for Process, maintaining some control states
 class runnerUnit:
     def __init__(self):
         (self.hostCon, kiteCon) = mp.Pipe(duplex=True)
@@ -44,6 +43,7 @@ class runnerUnit:
         self.hostCon.close()
         return vPid
 
+# Abstraction for managing all-alive process pool
 class runnerPool:
     def __init__(self, _concurrency):
         self.defaultNum = _concurrency
@@ -93,7 +93,7 @@ class runnerPool:
         self.threadLock.release()
         return vPid # For cGroup
 
-
+# Top Abstraction
 class Runner:
     def __init__(self):
         self.function = None
@@ -159,11 +159,10 @@ def run():
     proxy.status = 'run'
 
     inp = request.get_json(force=True, silent=True)
-    inputData = inp['input']
 
     # record the execution time
     start = time.time()
-    flag, outputData = runner.run(inputData)
+    flag, outputData = runner.run(inp)
     end = time.time()
 
     res = {
@@ -179,6 +178,7 @@ def run():
 
 
 if __name__ == '__main__':
+    # Avoid normal fork() copy thread lock without copying all threads
     pCtx = mp.get_context('spawn')
     print("Init Process Context Successfully and Proxy starts.")
-    proxy.run(host='127.0.0.1', port=23333, debug=False, threaded = True)
+    proxy.run(host='0.0.0.0', port=23333, debug=False, threaded = True)

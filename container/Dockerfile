@@ -24,6 +24,6 @@ EXPOSE 23333
 
 RUN apt-get clean
 RUN apt-get update
-RUN pip3 install --no-cache-dir gevent flask wasmtime
+RUN pip3 install --no-cache-dir flask wasmtime
 
 CMD [ "python3", "/proxy/proxy.py" ]

@@ -13,6 +13,7 @@ class Container:
                                           init=True,
                                           cpuset_cpus='0-3',
                                           cpu_quota=20000,
+                                          pid_mode='host', # For directly get PID in host side
                                           mem_limit='128m',
                                           ports={'23333/tcp': str(port)},
                                           labels=['workflow'])
@@ -35,12 +36,11 @@ class Container:
         self.concurrency = concurrency
         self.pidList = None
         
-    # wait for the container cold start // Q:指的是容器初始化并且启动了Flask？
+    # wait for the container cold start
     def wait_start(self):
         while True:
             try:
                 r = requests.get(base_url.format(self.port, 'status'))
-                print(r)
                 if r.status_code == 200:
                     break
             except Exception:
@@ -49,27 +49,28 @@ class Container:
 
     # send a request to container and wait for result
     def send_request(self, data = {}):
-
-
         r = requests.post(base_url.format(self.port, 'run'), json=data)
         self.lasttime = time.time()
-
         print(r.json())
         return r.json()
 
     # initialize the container
-    def init(self,function_name):
-        data = {'function': function_name}
+    def init(self, function_name, concurrency):
+        data = {
+            'function': function_name,
+            'concurrency': concurrency
+            }
         r = requests.post(base_url.format(self.port, 'init'), json=data)
         self.lasttime = time.time()
-        print(r)
         self.pidList = r.json()['pid_list']
         print(self.pidList)
+        time.sleep(3)
         return r.status_code == 200
-
-    # kill and remove the container
-    # def cgroup_init(pidList):
-        
+    
+    # Init one limitation on Specific Process
+    def add_limit(_pid):
+        pass
+       
 
     def destroy(self):
         self.container.remove(force=True)
