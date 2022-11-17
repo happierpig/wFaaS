@@ -49,6 +49,10 @@ class Container:
 
     # send a request to container and wait for result
     def send_request(self, data = {}):
+        # This is for debug
+        data = {
+            'time': '2022-10-23'
+        }
         r = requests.post(base_url.format(self.port, 'run'), json=data)
         self.lasttime = time.time()
         print(r.json())
