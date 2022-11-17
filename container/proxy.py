@@ -113,11 +113,21 @@ class Runner:
         flag, outputData = self.runners.dispatch_request(_inputData)
         return flag, outputData
 
+def memory_test():
+    bigList = []
+    count = 1
+    while(True):
+        bigList.append([0]*4096) # 4k bytes for one time ; 256 times for 1 M 
+        time.sleep(0.001)
+        if count % 2560 == 0:
+            print("Allocate: ",count/2560," M Bytes")
+        if count > 2560 * 256:
+            break
+
 def occupy_func(con):
     while(True):
         inputData = con.recv() # Blocking for Idle
         # todo : Sent into wasm worker
-        time.sleep(2)
         outputData = {
             "test": 1,
             "author": 'happypig'
