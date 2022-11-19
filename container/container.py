@@ -42,6 +42,7 @@ class Container:
             try:
                 r = requests.get(base_url.format(self.port, 'status'))
                 if r.status_code == 200:
+                    print("Init success and The container ID is : ",self.container.id)
                     break
             except Exception:
                 pass
