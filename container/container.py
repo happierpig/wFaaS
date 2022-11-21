@@ -4,7 +4,7 @@ import gevent
 import os
 
 base_url = 'http://127.0.0.1:{}/{}'
-cgroup_path = '/sys/fs/croup/{}/docker/{}/'
+cgroup_path = '/sys/fs/cgroup/{}/docker/{}'
 
 class Container:
     # create a new container and return the wrapper (ps: the unit of memory is Mb)
