@@ -9,7 +9,7 @@ cgroup_path = '/sys/fs/cgroup/{}/docker/{}'
 class Container:
     # create a new container and return the wrapper (ps: the unit of memory is Mb)
     @classmethod
-    def create(cls, client, image_name, port, attr, concurrency = 3, memory = 128):
+    def create(cls, client, image_name, port, attr, concurrency = 3, memory = 128, cpuRes = 0.1):
         container = client.containers.run(image_name,
                                           detach=True,
                                           init=True,
@@ -19,7 +19,7 @@ class Container:
                                           mem_limit='128m',
                                           ports={'23333/tcp': str(port)},
                                           labels=['workflow'])
-        res = cls(container, port, attr, concurrency, memory)
+        res = cls(container, port, attr, concurrency, memory, cpuRes)
         res.wait_start()
         return res
 
@@ -30,7 +30,7 @@ class Container:
         container = client.containers.get(container_id)
         return cls(container, port, attr)
 
-    def __init__(self, container, port, attr, concurrency, memory):
+    def __init__(self, container, port, attr, concurrency, memory, cpuRes):
         self.container = container
         self.port = port
         self.attr = attr
@@ -42,6 +42,7 @@ class Container:
         self.containerID = None
 
         self.workerMemoryLimit = memory * 1024 * 1024 # Written in cGroup
+        self.cpuLimit = (int)(cpuRes * 100000) # Written in cGroup
 
     # Tools Function for controling resources
     def get_pids(self):
@@ -84,12 +85,15 @@ class Container:
         # self.pidList = r.json()['pid_list'] # Fake Pids in Container Namespace
         # print(self.pidList)
         self.pidList = self.get_pids()
-        time.sleep(3)
+        for tmpEntry in self.proxyPid:
+            if not tmpEntry in self.pidList:
+                self.proxyPid.remove(tmpEntry)
+        # time.sleep(3) # Avoid process not ready for assignments
         return r.status_code == 200
     
     # Init one limitation on Specific Process
     def add_memoryLimits(self):
-        print("Try Modify Cgroup")
+        print("Try Modify Memory Cgroup")
         tmpPath = cgroup_path.format('memory',self.containerID) + '/worker'
         if not os.path.exists(tmpPath):
             os.mkdir(tmpPath)
@@ -100,15 +104,47 @@ class Container:
                 continue
             os.mkdir(tmpPath + '/' + str(processID))
             with open(tmpPath + '/' + str(processID) + '/memory.limit_in_bytes','w') as f:
-                f.write(self.workerMemoryLimit)
+                f.write(str(self.workerMemoryLimit))
             f.close()
             with open(tmpPath + '/' + str(processID) + '/tasks', 'w') as f:
-                f.write(processID)
+                f.write(str(processID))
             f.close()
 
         with open(tmpPath + '/memory.limit_in_bytes','w') as f:
-            f.write(128 * 1024 * 1024 * len(self.proxyPid) + self.workerMemoryLimit * (len(self.pidList)-len(self.proxyPid)))
+            f.write(str(self.workerMemoryLimit * (len(self.pidList)-len(self.proxyPid))))
         f.close()
+
+        with open(cgroup_path.format('memory',self.containerID) + '/memory.limit_in_bytes','w') as f:
+            f.write(str(128*1024*1024*len(self.proxyPid) + self.workerMemoryLimit * (len(self.pidList)-len(self.proxyPid))))
+        f.close()        
+        print("Modify Cgroup Finish")
+    
+    def add_cputLimits(self):
+        print("Try Modify CPU Cgroup")
+        tmpPath = cgroup_path.format('cpu,cpuacct',self.containerID) + '/worker'
+        if not os.path.exists(tmpPath):
+            os.mkdir(tmpPath)
+        entries = os.listdir(tmpPath)
+
+        for processID in self.pidList:
+            if processID in entries:
+                continue
+            os.mkdir(tmpPath + '/' + str(processID))
+            with open(tmpPath + '/' + str(processID) + '/cpu.cfs_quota_us','w') as f:
+                f.write(str(self.cpuLimit))
+            f.close()
+            with open(tmpPath + '/' + str(processID) + '/tasks', 'w') as f:
+                f.write(str(processID))
+            f.close()
+
+        with open(cgroup_path.format('cpu,cpuacct',self.containerID) + '/cpu.cfs_quota_us','w') as f:
+            f.write(str(self.cpuLimit * len(self.pidList)))
+        f.close()     
+
+        with open(tmpPath + '/cpu.cfs_quota_us','w') as f:
+            f.write(str(self.cpuLimit * len(self.pidList)))
+        f.close()   
+        
         print("Modify Cgroup Finish")
 
     def destroy(self):
