@@ -31,6 +31,7 @@ from container import Container
 client = docker.from_env()
 a = Container.create(client,'faas',23343,'exec')
 a.init("test",5)
+a.add_memoryLimits()
 jobs = []
 for i in range(5):
     print("Remote call : ",i)
