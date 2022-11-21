@@ -30,10 +30,11 @@ class runnerUnit:
 
     def runCode(self, data): # Must be called after occupy
         self.hostCon.send(data) # wake up the sleepy process
+        outputVal = self.hostCon.recv() # block it again
         self.threadLock.acquire()
         self.idle = True
         self.threadLock.release()
-        return {'test':'memory'}
+        return outputVal
     
     def destroy(self):
         vPid = self.getvPid()
@@ -98,7 +99,7 @@ class Runner:
         self.function = None
         self.ctx = {}
         self.runners = None
-        self.concurrency = 40
+        self.concurrency = None
 
     def init(self, _function, _concurrency):
         print('init...')
@@ -117,15 +118,21 @@ def memory_test():
     count = 1
     while(True):
         bigList.append([0]*4096) # 4k bytes for one time ; 256 times for 1 M 
-        time.sleep(0.1)
+        time.sleep(0.001)
         if count % 2560 == 0:
             print("Allocate: ",count/2560," M Bytes")
         if count > 2560 * 256:
             break
 
 def occupy_func(con):
-    inputData = con.recv() # Blocking for Idle
-    memory_test()    
+    while(True):
+        inputData = con.recv() # Blocking for Idle
+        # todo : Sent into wasm worker
+        outputData = {
+            "test": 1,
+            "author": 'happypig'
+            }
+        con.send(outputData)
 
 runner = Runner()
 proxy = Flask(__name__)
