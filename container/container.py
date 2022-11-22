@@ -75,10 +75,10 @@ class Container:
         return r.json()
 
     # initialize the container
-    def init(self, function_name, concurrency):
+    def init(self, function_name):
         data = {
             'function': function_name,
-            'concurrency': concurrency
+            'concurrency': self.concurrency
             }
         r = requests.post(base_url.format(self.port, 'init'), json=data)
         self.lasttime = time.time()
@@ -89,11 +89,12 @@ class Container:
             if not tmpEntry in self.pidList:
                 self.proxyPid.remove(tmpEntry)
         # time.sleep(3) # Avoid process not ready for assignments
+        self.add_memoryLimits()
+        self.add_cputLimits()
         return r.status_code == 200
     
     # Init one limitation on Specific Process
     def add_memoryLimits(self):
-        print("Try Modify Memory Cgroup")
         tmpPath = cgroup_path.format('memory',self.containerID) + '/worker'
         if not os.path.exists(tmpPath):
             os.mkdir(tmpPath)
@@ -117,10 +118,8 @@ class Container:
         with open(cgroup_path.format('memory',self.containerID) + '/memory.limit_in_bytes','w') as f:
             f.write(str(128*1024*1024*len(self.proxyPid) + self.workerMemoryLimit * (len(self.pidList)-len(self.proxyPid))))
         f.close()        
-        print("Modify Cgroup Finish")
     
     def add_cputLimits(self):
-        print("Try Modify CPU Cgroup")
         tmpPath = cgroup_path.format('cpu,cpuacct',self.containerID) + '/worker'
         if not os.path.exists(tmpPath):
             os.mkdir(tmpPath)
@@ -145,8 +144,6 @@ class Container:
             f.write(str(self.cpuLimit * len(self.pidList)))
         f.close()   
         
-        print("Modify Cgroup Finish")
-
     def limits_recycle(self):
         print("Try Recycle the cgroup subsystem")
         tmpPath = cgroup_path.format('cpu,cpuacct',self.containerID) + '/worker'
