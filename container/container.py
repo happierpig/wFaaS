@@ -71,8 +71,11 @@ class Container:
         }
         r = requests.post(base_url.format(self.port, 'run'), json=data)
         self.lasttime = time.time()
-        print(r.json())
-        return r.json()
+        resp = r.json()
+        if(resp['new_worker'] == False): # New worker exists
+            self.add_cputLimits()
+            self.add_memoryLimits()
+        return resp
 
     # initialize the container
     def init(self, function_name):

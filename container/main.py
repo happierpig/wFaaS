@@ -31,9 +31,8 @@ from container import Container
 client = docker.from_env()
 a = Container.create(client,'faas',23343,'exec')
 a.init("test")
-a.add_memoryLimits()
 jobs = []
-for i in range(5):
+for i in range(15):
     print("Remote call : ",i)
     jobs.append(gevent.spawn(a.send_request))
 gevent.joinall(jobs)

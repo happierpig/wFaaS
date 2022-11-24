@@ -8,6 +8,7 @@ import multiprocessing as mp
 default_file = 'main.wat'
 work_dir = '/proxy'
 pCtx = None # Used to designate the fork manner into 'spawn'
+expire_time = 15 # Used to naturally expire the worker's life
 
 # Wrapper Class for Process, maintaining some control states
 class runnerUnit:
@@ -17,6 +18,7 @@ class runnerUnit:
         self.worker.start() # not use Process.run()
         self.threadLock = threading.Lock()
         self.idle = True
+        self.timeStamp = time.time()
 
     def getvPid(self):
         return self.worker.pid
@@ -33,8 +35,16 @@ class runnerUnit:
         outputVal = self.hostCon.recv() # block it again
         self.threadLock.acquire()
         self.idle = True
+        self.timeStamp = time.time()
         self.threadLock.release()
         return outputVal
+    
+    def checkTime(self): # Must be called after occupy
+        self.threadLock.acquire()
+        self.idle = True
+        self.threadLock.release()
+        return (time.time() - self.timeStamp) < expire_time
+        
     
     def destroy(self):
         vPid = self.getvPid()
@@ -67,9 +77,10 @@ class runnerPool:
                 flag = True
                 break
         self.threadLock.release()
-        if flag == True:
-            outputVal = candidate.runCode(inputData)
-        return flag, outputVal
+        if flag == False:
+            candidate = self.addRunner()
+        outputVal = candidate.runCode(inputData)
+        return flag, outputVal # flag is false representing that this request call on a new worker process
     
     def addRunner(self):
         newRunner = runnerUnit()
@@ -77,21 +88,33 @@ class runnerPool:
         self.runnerList.append(newRunner)
         self.aliveNum += 1
         self.threadLock.release()
-        return newRunner.getvPid() # For cGroup
+        return newRunner # Return the object of the new runner for calling it 
 
     def rmRunner(self):
         # todo : design a remove stragegy 
         # now it always rm the lastest one
         self.threadLock.acquire()
+        if self.aliveNum <= self.defaultNum: # Only clean the extra runner
+            self.threadLock.release()
+            return False
         victimRunner = self.runnerList[self.aliveNum-1]
-        while(True):
-            if victimRunner.tryOccupy() == True:
-                break
+        if victimRunner.tryOccupy() == False: # Maybe under running
+            self.threadLock.release()
+            return False # Fail to delete 
+        if victimRunner.checkTime() == True: # Maybe still alive
+            self.threadLock.release()
+            return False
         vPid = victimRunner.destroy()
         self.aliveNum -= 1
         self.runnerList.remove(victimRunner)
         self.threadLock.release()
-        return vPid # For cGroup
+        return True # Successfully delete
+
+def daemonCleaner(timeSleep, runnersSet): # Function used to clean the expired worker
+    while(True):
+        time.sleep(timeSleep)
+        runnersSet.rmRunner()
+
 
 # Top Abstraction
 class Runner:
@@ -156,11 +179,11 @@ def init():
 
     inp = request.get_json(force=True, silent=True)
     pidList = runner.init(inp['function'], inp['concurrency'])
-
+    t = threading.Thread(target=daemonCleaner,args=(2, runner.runners,))
+    t.start()
     res = {
         "pid_list": pidList
     }
-
     return res
 
 
@@ -181,7 +204,7 @@ def run():
         "duration": end - start,
         "inp": inp,
         "output": outputData,
-        "executed": flag
+        "new_worker": flag # False for new worker / True for old worker
     }
     proxy.status = 'ok'
     return res
