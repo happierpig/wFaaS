@@ -75,6 +75,7 @@ class Container:
         if(resp['new_worker'] == False): # New worker exists
             self.add_cputLimits()
             self.add_memoryLimits()
+        print(resp)
         return resp
 
     # initialize the container

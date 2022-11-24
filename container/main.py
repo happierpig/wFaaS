@@ -34,6 +34,7 @@ a.init("test")
 jobs = []
 for i in range(15):
     print("Remote call : ",i)
+    time.sleep(0.5)
     jobs.append(gevent.spawn(a.send_request))
 gevent.joinall(jobs)
 time.sleep(200)

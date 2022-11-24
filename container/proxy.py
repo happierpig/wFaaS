@@ -87,6 +87,7 @@ class runnerPool:
         self.threadLock.acquire()
         self.runnerList.append(newRunner)
         self.aliveNum += 1
+        newRunner.idle = False # Used for calling request
         self.threadLock.release()
         return newRunner # Return the object of the new runner for calling it 
 
