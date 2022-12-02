@@ -9,7 +9,7 @@ cgroup_path = '/sys/fs/cgroup/{}/docker/{}'
 class Container:
     # create a new container and return the wrapper (ps: the unit of memory is Mb)
     @classmethod
-    def create(cls, client, image_name, port, attr, concurrency = 3, memory = 128, cpuRes = 0.1):
+    def create(cls, client, image_name, port, attr, concurrency = 3, memory = 128, cpuRes = 0.2):
         container = client.containers.run(image_name,
                                           detach=True,
                                           init=True,
@@ -18,7 +18,7 @@ class Container:
                                           #pid_mode='host', # For directly get PID in host side
                                           mem_limit='128m',
                                           ports={'23333/tcp': str(port)},
-                                          labels=['workflow'])
+                                          labels=['wFaaS'])
         res = cls(container, port, attr, concurrency, memory, cpuRes)
         res.wait_start()
         return res
