@@ -82,7 +82,8 @@ class Container:
     def init(self, function_name):
         data = {
             'function': function_name,
-            'concurrency': self.concurrency
+            'concurrency': self.concurrency,
+            'id': self.containerID
             }
         r = requests.post(base_url.format(self.port, 'init'), json=data)
         self.lasttime = time.time()

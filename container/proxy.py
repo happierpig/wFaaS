@@ -1,5 +1,6 @@
 import os
 import time
+import socket
 from flask import Flask, request
 import threading
 from wasmtime import Store, Module, Instance
@@ -9,6 +10,7 @@ default_file = 'main.wat'
 work_dir = '/proxy'
 pCtx = None # Used to designate the fork manner into 'spawn'
 expire_time = 15 # Used to naturally expire the worker's life
+socket_address = '/con/pipe' # All pipe mounted to this file.
 
 # Wrapper Class for Process, maintaining some control states
 class runnerUnit:
@@ -41,7 +43,7 @@ class runnerUnit:
     
     def checkTime(self): # Must be called after occupy
         self.threadLock.acquire()
-        self.idle = True
+        self.idle = True # This corperate with tryOccupy in rmRunner
         self.threadLock.release()
         return (time.time() - self.timeStamp) < expire_time
         
@@ -114,7 +116,11 @@ class runnerPool:
 def daemonCleaner(timeSleep, runnersSet): # Function used to clean the expired worker
     while(True):
         time.sleep(timeSleep)
-        runnersSet.rmRunner()
+        if runnersSet.runners.rmRunner() == True:
+            if runnersSet.runners.aliveNum == 0:
+                s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                s.connect(socket_address)
+                s.send(runnersSet.containerID)
 
 
 # Top Abstraction
@@ -125,11 +131,12 @@ class Runner:
         self.runners = None
         self.concurrency = None
 
-    def init(self, _function, _concurrency):
+    def init(self, _function, _concurrency, _id):
         print('init...')
         self.function = _function
         self.concurrency = _concurrency
         self.runners = runnerPool(self.concurrency)
+        self.containerID = _id
         print('init finish...')
         return self.runners.getPids()
 
@@ -179,8 +186,8 @@ def init():
     proxy.status = 'init'
 
     inp = request.get_json(force=True, silent=True)
-    pidList = runner.init(inp['function'], inp['concurrency'])
-    t = threading.Thread(target=daemonCleaner,args=(2, runner.runners,))
+    pidList = runner.init(inp['function'], inp['concurrency'], inp['id'])
+    t = threading.Thread(target=daemonCleaner,args=(2, runner,))
     t.start()
     res = {
         "pid_list": pidList

@@ -38,6 +38,7 @@ class FunctionSet:
             # todo: precreate User Unit / Check thread safety
             # create Unit
             theWorker = FunctionUnit(self.dockerClient, self.portMan, rq.userID, self.funcInfo)
+            theWorker.init()
             self.userWorker[rq.userID] = theWorker
         theWorker.send_request(rq)
 
