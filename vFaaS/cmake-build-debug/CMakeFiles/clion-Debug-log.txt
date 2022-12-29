@@ -1,0 +1,17 @@
+/home/dreamer/Desktop/clion-2022.3.1/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" -S /home/dreamer/epcc/vFaaS -B /home/dreamer/epcc/vFaaS/cmake-build-debug
+-- Build Configurations:
+     Build as target X86_64
+     CMAKE_BUILD_TYPE Debug
+     WAMR Interpreter enabled
+     WAMR AOT disabled
+     WAMR Fast JIT disabled
+     WAMR LLVM ORC JIT disabled
+     Libc builtin enabled
+     Libc WASI enabled
+     Fast interpreter enabled
+     Multiple modules disabled
+     Bulk memory feature enabled
+     Reference types disabled
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/dreamer/epcc/vFaaS/cmake-build-debug
