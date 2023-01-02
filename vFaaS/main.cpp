@@ -1,6 +1,6 @@
-#include <wasm_exec_env.h>
-#include <wasm_export.h>
-#include "utils.h"
+#include "native.hpp"
+#include "utils.hpp"
+
 int main(){
     std::string wasmFilePath = "../wasmCode/test.wasm";
     char error_buf[128];
@@ -12,6 +12,8 @@ int main(){
 
     /* initialize the wasm runtime by default configurations */
     wasm_runtime_init();
+
+    if(!wasm_runtime_register_natives("env", ns, sizeof(ns) / sizeof(NativeSymbol))) throw "[Runtime] Fail to register the native fucntion.";
 
     /* read WASM file into a memory buffer */
     std::vector<uint8_t> codeBytes; 
