@@ -10,7 +10,7 @@ int main(){
     int* buf;
     printf("Hello world!\n");
     buf = reinterpret_cast<int *> (wFaaSGetArg(0));
-    printf("Int%d",*buf);
+    printf("Int: %d\n",*buf);
     free(buf);
     return 0;
 }

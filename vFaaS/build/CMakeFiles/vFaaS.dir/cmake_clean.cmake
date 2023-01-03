@@ -1,8 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/vFaaS.dir/main.cpp.o"
   "CMakeFiles/vFaaS.dir/main.cpp.o.d"
-  "CMakeFiles/vFaaS.dir/utils.cpp.o"
-  "CMakeFiles/vFaaS.dir/utils.cpp.o.d"
+  "CMakeFiles/vFaaS.dir/worker/utils.cpp.o"
+  "CMakeFiles/vFaaS.dir/worker/utils.cpp.o.d"
   "vFaaS"
   "vFaaS.pdb"
 )

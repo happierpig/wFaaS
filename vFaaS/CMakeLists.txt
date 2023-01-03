@@ -18,6 +18,6 @@ add_compile_options(-pthread)
 
 include (${WAMR_ROOT_DIR}/build-scripts/runtime_lib.cmake)
 add_library(vmlib ${WAMR_RUNTIME_LIB_SOURCE})
-add_executable(vFaaS main.cpp utils.cpp) 
+add_executable(vFaaS main.cpp worker/utils.cpp) 
 
 target_link_libraries (vFaaS PUBLIC vmlib -lpthread)
