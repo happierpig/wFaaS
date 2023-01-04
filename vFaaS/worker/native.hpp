@@ -7,11 +7,13 @@
 #include <wasm_exec_env.h>
 #include <wasm_export.h>
 
+std::vector<int> argLengths;
+std::vector<uint8_t*> argCollection;
+uint8_t* resultBuffer;
+//todo:return size
+
 static int read_input_native(wasm_exec_env_t exec_env , int32_t argIndex, uint8_t* inBuffer, int32_t inLength)
 {
-    // temporary data structure for testing
-    std::vector<int> argLengths = {4};
-    int x = 1111; std::vector<uint8_t*> argCollection = {reinterpret_cast<uint8_t*>(&x)};
     if(argIndex >= argLengths.size()) throw "[Host_Iface_Func] Arg index out of bound";
     if(inLength == 0) return argLengths[argIndex];
     if(inLength != argLengths[argIndex]) throw "[Host_Iface_Func] Wrong arg length";
