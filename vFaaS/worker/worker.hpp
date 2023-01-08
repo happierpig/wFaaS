@@ -1,6 +1,6 @@
 #include "native.hpp"
-#include "utils.hpp"
-#include "functionConfig.hpp"
+#include "../include/utils.hpp"
+#include "../include/functionConfig.hpp"
 
 static std::string wasmFilePath = "../wasmCode/test.wasm";
 static const char* functionConfigPath = "../wasmCode/func.config";

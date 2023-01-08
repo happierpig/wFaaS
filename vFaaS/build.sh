@@ -1,7 +1,7 @@
 cd wasmCode
 bash build.sh
-cd ../build
-make clean
-cmake ..
-make
-./vFaaS
+cd ../worker
+bash build.sh
+cd ../proxy
+bash build.sh
+cd ..

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(vFaaS VERSION 0.1)  
+project(worker VERSION 0.1)  
 
 
 set (WAMR_BUILD_PLATFORM "linux")
@@ -18,6 +18,6 @@ add_compile_options(-pthread)
 
 include (${WAMR_ROOT_DIR}/build-scripts/runtime_lib.cmake)
 add_library(vmlib ${WAMR_RUNTIME_LIB_SOURCE})
-add_executable(vFaaS main.cpp utils.cpp) 
+add_executable(worker main.cpp ../include/utils.cpp) 
 
-target_link_libraries (vFaaS PUBLIC vmlib -lpthread)
+target_link_libraries (worker PUBLIC vmlib -lpthread)

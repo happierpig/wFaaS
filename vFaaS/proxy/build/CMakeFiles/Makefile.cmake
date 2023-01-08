@@ -7,22 +7,10 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 # The top level Makefile was generated from the following files:
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
-  "/home/dreamer/epcc/vFaaS/worker/CMakeLists.txt"
-  "CMakeFiles/3.25.1/CMakeASMCompiler.cmake"
+  "/home/dreamer/epcc/vFaaS/proxy/CMakeLists.txt"
   "CMakeFiles/3.25.1/CMakeCCompiler.cmake"
   "CMakeFiles/3.25.1/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.25.1/CMakeSystem.cmake"
-  "/home/dreamer/epcc/wasm-micro-runtime/build-scripts/config_common.cmake"
-  "/home/dreamer/epcc/wasm-micro-runtime/build-scripts/runtime_lib.cmake"
-  "/home/dreamer/epcc/wasm-micro-runtime/core/iwasm/common/iwasm_common.cmake"
-  "/home/dreamer/epcc/wasm-micro-runtime/core/iwasm/interpreter/iwasm_interp.cmake"
-  "/home/dreamer/epcc/wasm-micro-runtime/core/iwasm/libraries/libc-builtin/libc_builtin.cmake"
-  "/home/dreamer/epcc/wasm-micro-runtime/core/iwasm/libraries/libc-wasi/libc_wasi.cmake"
-  "/home/dreamer/epcc/wasm-micro-runtime/core/shared/mem-alloc/mem_alloc.cmake"
-  "/home/dreamer/epcc/wasm-micro-runtime/core/shared/platform/common/posix/platform_api_posix.cmake"
-  "/home/dreamer/epcc/wasm-micro-runtime/core/shared/platform/linux/shared_platform.cmake"
-  "/home/dreamer/epcc/wasm-micro-runtime/core/shared/utils/shared_utils.cmake"
-  "/usr/share/cmake-3.25/Modules/CMakeASMInformation.cmake"
   "/usr/share/cmake-3.25/Modules/CMakeCInformation.cmake"
   "/usr/share/cmake-3.25/Modules/CMakeCXXInformation.cmake"
   "/usr/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake"
@@ -32,7 +20,6 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/usr/share/cmake-3.25/Modules/CMakeSystemSpecificInformation.cmake"
   "/usr/share/cmake-3.25/Modules/CMakeSystemSpecificInitialize.cmake"
   "/usr/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
-  "/usr/share/cmake-3.25/Modules/Compiler/GNU-ASM.cmake"
   "/usr/share/cmake-3.25/Modules/Compiler/GNU-C.cmake"
   "/usr/share/cmake-3.25/Modules/Compiler/GNU-CXX.cmake"
   "/usr/share/cmake-3.25/Modules/Compiler/GNU.cmake"
@@ -56,6 +43,5 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/vmlib.dir/DependInfo.cmake"
-  "CMakeFiles/worker.dir/DependInfo.cmake"
+  "CMakeFiles/proxy.dir/DependInfo.cmake"
   )

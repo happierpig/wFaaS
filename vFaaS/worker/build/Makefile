@@ -130,17 +130,41 @@ vmlib/fast:
 .PHONY : vmlib/fast
 
 #=============================================================================
-# Target rules for targets named vFaaS
+# Target rules for targets named worker
 
 # Build rule for target.
-vFaaS: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 vFaaS
-.PHONY : vFaaS
+worker: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 worker
+.PHONY : worker
 
 # fast build rule for target.
-vFaaS/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vFaaS.dir/build.make CMakeFiles/vFaaS.dir/build
-.PHONY : vFaaS/fast
+worker/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/worker.dir/build.make CMakeFiles/worker.dir/build
+.PHONY : worker/fast
+
+home/dreamer/epcc/vFaaS/include/utils.o: home/dreamer/epcc/vFaaS/include/utils.cpp.o
+.PHONY : home/dreamer/epcc/vFaaS/include/utils.o
+
+# target to build an object file
+home/dreamer/epcc/vFaaS/include/utils.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/worker.dir/build.make CMakeFiles/worker.dir/home/dreamer/epcc/vFaaS/include/utils.cpp.o
+.PHONY : home/dreamer/epcc/vFaaS/include/utils.cpp.o
+
+home/dreamer/epcc/vFaaS/include/utils.i: home/dreamer/epcc/vFaaS/include/utils.cpp.i
+.PHONY : home/dreamer/epcc/vFaaS/include/utils.i
+
+# target to preprocess a source file
+home/dreamer/epcc/vFaaS/include/utils.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/worker.dir/build.make CMakeFiles/worker.dir/home/dreamer/epcc/vFaaS/include/utils.cpp.i
+.PHONY : home/dreamer/epcc/vFaaS/include/utils.cpp.i
+
+home/dreamer/epcc/vFaaS/include/utils.s: home/dreamer/epcc/vFaaS/include/utils.cpp.s
+.PHONY : home/dreamer/epcc/vFaaS/include/utils.s
+
+# target to generate assembly for a file
+home/dreamer/epcc/vFaaS/include/utils.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/worker.dir/build.make CMakeFiles/worker.dir/home/dreamer/epcc/vFaaS/include/utils.cpp.s
+.PHONY : home/dreamer/epcc/vFaaS/include/utils.cpp.s
 
 home/dreamer/epcc/wasm-micro-runtime/core/iwasm/common/arch/invokeNative_em64.o: home/dreamer/epcc/wasm-micro-runtime/core/iwasm/common/arch/invokeNative_em64.s.o
 .PHONY : home/dreamer/epcc/wasm-micro-runtime/core/iwasm/common/arch/invokeNative_em64.o
@@ -947,7 +971,7 @@ main.o: main.cpp.o
 
 # target to build an object file
 main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vFaaS.dir/build.make CMakeFiles/vFaaS.dir/main.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/worker.dir/build.make CMakeFiles/worker.dir/main.cpp.o
 .PHONY : main.cpp.o
 
 main.i: main.cpp.i
@@ -955,7 +979,7 @@ main.i: main.cpp.i
 
 # target to preprocess a source file
 main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vFaaS.dir/build.make CMakeFiles/vFaaS.dir/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/worker.dir/build.make CMakeFiles/worker.dir/main.cpp.i
 .PHONY : main.cpp.i
 
 main.s: main.cpp.s
@@ -963,32 +987,8 @@ main.s: main.cpp.s
 
 # target to generate assembly for a file
 main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vFaaS.dir/build.make CMakeFiles/vFaaS.dir/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/worker.dir/build.make CMakeFiles/worker.dir/main.cpp.s
 .PHONY : main.cpp.s
-
-utils.o: utils.cpp.o
-.PHONY : utils.o
-
-# target to build an object file
-utils.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vFaaS.dir/build.make CMakeFiles/vFaaS.dir/utils.cpp.o
-.PHONY : utils.cpp.o
-
-utils.i: utils.cpp.i
-.PHONY : utils.i
-
-# target to preprocess a source file
-utils.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vFaaS.dir/build.make CMakeFiles/vFaaS.dir/utils.cpp.i
-.PHONY : utils.cpp.i
-
-utils.s: utils.cpp.s
-.PHONY : utils.s
-
-# target to generate assembly for a file
-utils.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/vFaaS.dir/build.make CMakeFiles/vFaaS.dir/utils.cpp.s
-.PHONY : utils.cpp.s
 
 # Help Target
 help:
@@ -998,8 +998,11 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... vFaaS"
 	@echo "... vmlib"
+	@echo "... worker"
+	@echo "... home/dreamer/epcc/vFaaS/include/utils.o"
+	@echo "... home/dreamer/epcc/vFaaS/include/utils.i"
+	@echo "... home/dreamer/epcc/vFaaS/include/utils.s"
 	@echo "... home/dreamer/epcc/wasm-micro-runtime/core/iwasm/common/arch/invokeNative_em64.o"
 	@echo "... home/dreamer/epcc/wasm-micro-runtime/core/iwasm/common/wasm_application.o"
 	@echo "... home/dreamer/epcc/wasm-micro-runtime/core/iwasm/common/wasm_application.i"
@@ -1103,9 +1106,6 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
-	@echo "... utils.o"
-	@echo "... utils.i"
-	@echo "... utils.s"
 .PHONY : help
 
 
