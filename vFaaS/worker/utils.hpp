@@ -29,4 +29,7 @@ bool startWorker(int *pid, int *infd, int *outfd);
 */
 void readBytes(int fd, unsigned char* buffer, int bufferLength);
 
+PIPE_COMMAND readPIPECommand(int fd);
+
+void writePIPECommand(int fd, PIPE_COMMAND cmd);
 }

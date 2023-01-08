@@ -1,9 +1,11 @@
 #include <iostream>
 #include <vector>
+#include <fstream>
 
 using std::vector;
 using std::cin;
 using std::cout;
+using std::fstream;
 
 class functionConfiguration{
     public:
@@ -16,7 +18,13 @@ class functionConfiguration{
         ~functionConfiguration() = default;
 
         void setFromFile(const char* path){
-
+            cout << "Try read function configuration from " << path << std::endl;
+            fstream inFile;
+            inFile.open(path, std::ios::in);
+            inFile >> stack_size >> heap_size >> return_size >> argc;
+            argsv.resize(argc);
+            for(int i = 0;i < argc;++i) inFile >> argsv[i];
+            cout << "Read Configuration Finish." << std::endl; 
         }
 
         void setFromStdin(){
@@ -32,7 +40,11 @@ class functionConfiguration{
 
         void dumpIntoFile(){
             cout << "Dump the function Configuration into workerspace/func.config" << std::endl;
-
+            fstream outFile;
+            outFile.open("func.config", std::ios::out);
+            outFile << stack_size << ' ' << heap_size << ' ' << return_size << ' ' << argc << ' ';
+            for(int i = 0;i < argc; ++i) outFile << argsv[i] << ' ';
+            cout << "Dump Finish" << std::endl;
         }
 
         int getInputSize(){

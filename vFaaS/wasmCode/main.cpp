@@ -7,10 +7,14 @@
 #include "host_interface.hpp"
 
 int main(){
-    int* buf;
+    int* a;
+    int* b;
     printf("Hello world!\n");
-    buf = reinterpret_cast<int *> (wFaaSGetArg(0));
-    printf("Int: %d\n",*buf);
-    free(buf);
+    a = reinterpret_cast<int *> (wFaaSGetArg(0, sizeof(int)));
+    b = reinterpret_cast<int *> (wFaaSGetArg(1, sizeof(int)));
+    int result = (*a) + (*b);
+    set_output((unsigned char*) (&result), sizeof(int));
+    free(a);
+    free(b);
     return 0;
 }

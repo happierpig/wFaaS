@@ -11,11 +11,7 @@ void readFileToBytes(const std::string& path, std::vector<uint8_t>& codeBytes){
     size_t fsize = statbuf.st_size;
     posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
     codeBytes.resize(fsize);
-    int rc = read(fd, codeBytes.data(), fsize);
-    if (rc < 0 || rc != fsize) {
-        perror("Couldn't read file");
-        throw std::runtime_error("Couldn't read file " + path);
-    }else std::cout << "Read " << rc << " Bytes." << std::endl;
+    readBytes(fd, codeBytes.data(), fsize);
     close(fd);
     return;
 }
@@ -70,4 +66,15 @@ void readBytes(int fd, unsigned char* buffer, int bufferLength){
         }
     }
 }
+
+PIPE_COMMAND readPIPECommand(int fd){
+    PIPE_COMMAND tmp;
+    readBytes(fd, (unsigned char*)(&tmp), sizeof(PIPE_COMMAND));
+    return tmp;
+}
+
+void writePIPECommand(int fd, PIPE_COMMAND cmd){
+    write(fd, &cmd, sizeof(PIPE_COMMAND));
+}
+
 }

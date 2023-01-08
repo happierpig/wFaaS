@@ -13,10 +13,10 @@
 
 int read_input(int argIndex, unsigned char* buffer, int bufferLen);
 
-uint8_t* wFaaSGetArg(int argIndex){
-    uint8_t occupy[1] = {0};
-    int argLenth = read_input(argIndex, occupy, 0);
-    auto buffer = (unsigned char *)malloc(argLenth);
-    read_input(argIndex, buffer, argLenth);
+void set_output(unsigned char* buffer, int bufferLen);
+
+uint8_t* wFaaSGetArg(int argIndex, int argLength){
+    auto buffer = (unsigned char *)malloc(argLength);
+    read_input(argIndex, buffer, argLength);
     return buffer;
 }

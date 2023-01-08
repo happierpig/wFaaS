@@ -16,21 +16,13 @@ class wasrModule{
     std::vector<uint8_t> codeBytes;
     functionConfiguration funcConfig;
 
-    void collectInput(const unsigned char* inputBuffer, int inputLength){
+    void collectInput(unsigned char* inputBuffer, int inputLength){
       int cPos = 0;
       for(int i = 0;i < argCollection.size();++i){
-        int argLen = funcConfig.argsv[i];
-        uint8_t* tmpPtr = new uint8_t[argLen];
-        std::copy(inputBuffer+cPos, inputBuffer+cPos+argLen, tmpPtr);
-        argCollection[i] = tmpPtr;
-        cPos += argLen;
+        argCollection[i] = inputBuffer + cPos;
+        cPos += funcConfig.argsv[i];
       }
       if(cPos != inputLength) throw "[WASR] Dismatch arguments input.";
-    }
-
-    void cleanInput(){
-      for(int i = 0;i < argCollection.size();++i)
-        free(argCollection[i]);
     }
     
   public:
@@ -42,6 +34,7 @@ class wasrModule{
 
       argCollection.resize(funcConfig.argc);
       argLengths = funcConfig.argsv;
+      resultLength = funcConfig.return_size;
     }
 
     ~wasrModule(){
@@ -65,17 +58,22 @@ class wasrModule{
       wasm_runtime_destroy();
     }
 
-    //todo: add setReturn value host_interface function
-    void runWasmCode(unsigned char* _resultBuffer, const unsigned char* inputBuffer, int inputLength){
-      collectInput(inputBuffer, inputLength);
+    void runWasmCode(unsigned char* inputBuffer){
+      collectInput(inputBuffer, getInputSize());
       std::vector<uint32_t> argv = {0,0};
       // Call the wasm code and the argument get from native function
       if (wasm_runtime_call_wasm(exec_env, func, 2, argv.data()) ) {
         /* the return value is stored in argv[0] */
         printf("fib function return: %d\n", argv[0]);
       }else printf("%s\n", wasm_runtime_get_exception(module_inst));
-      cleanInput();
-      std::copy(resultBuffer, resultBuffer+funcConfig.getInputSize(), _resultBuffer);
+    }
+
+    int getInputSize(){
+      return funcConfig.getInputSize();
+    }
+
+    int getReturnSize(){
+      return funcConfig.return_size;
     }
 
 };
