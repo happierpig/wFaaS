@@ -67,6 +67,17 @@ void readBytes(int fd, unsigned char* buffer, int bufferLength){
     }
 }
 
+void readFromJson(std::string& raw, uint8_t* ptr, int ptrLen){
+    std::string decodedString = base64_decode(raw, false);
+    int size = decodedString.size();
+    if(size != ptrLen) throw "[Json Util] Unmatched data length.";
+    std::copy(decodedString.data(), decodedString.data() + size, ptr);
+}
+
+std::string writeToJson(uint8_t* ptr, int len){
+    return base64_encode(ptr, len, false);
+}
+
 PIPE_COMMAND readPIPECommand(int fd){
     PIPE_COMMAND tmp;
     readBytes(fd, (unsigned char*)(&tmp), sizeof(PIPE_COMMAND));
@@ -78,3 +89,39 @@ void writePIPECommand(int fd, PIPE_COMMAND cmd){
 }
 
 }
+
+
+
+/*
+    Test Code for base64 encoding
+*/
+
+// #include "../include/base64.h"
+// #include <iostream>
+// class testClass{
+//     public:
+//     int x;
+//     int y;
+//     int z;
+//     testClass(int _x, int _y, int _z){
+//         this->x = _x;
+//         this->y = _y;
+//         this->z = _z;
+//     }
+//     void print(){
+//         std::cout << x << ' ' << y << ' ' << z << std::endl;
+//     }
+// };
+// int main(){
+//     testClass testUnit(1,2,3);
+//     unsigned char* ptr = (unsigned char*)(&testUnit);
+//     std::string encodedBytes = base64_encode(ptr, sizeof(testClass), false);
+//     std::cout << "Encoded: " << encodedBytes << std::endl;
+//     std::string decodedBytes = base64_decode(encodedBytes, false);
+//     std::cout << "Decoded: " << decodedBytes << std::endl;
+//     std::cout << "Origin Size : " << sizeof(testClass) << std::endl << "Now Size : " << decodedBytes.size() << std::endl;
+//     ptr = new unsigned char[sizeof(testClass)];
+//     std::copy(decodedBytes.data(),decodedBytes.data()+decodedBytes.size(),ptr);
+//     ((testClass*)(ptr))->print();
+//     return 0;
+// }

@@ -1,13 +1,6 @@
 #include "WorkerUnit.hpp"
 
-class WorkerPool;
-
-static void* daemon_cleaner(void* ptr){
-    while(true){
-        sleep(10);
-        ((WorkerPool*)ptr)->try_remove();
-    }
-}
+static void* daemon_cleaner(void* ptr);
 
 class WorkerPool{
     private:
@@ -32,7 +25,7 @@ class WorkerPool{
 
     WorkerPool(){
         pthread_mutex_init(&mutex, NULL);
-        pool.push_back(new WorkerUnit(60)); // The first process last more time.
+        pool.push_back(new WorkerUnit(30)); // The first process last more time.
         // Update daemon thread
         pthread_t ppid;
         pthread_create(&ppid, NULL, daemon_cleaner, (void*)this);
@@ -40,6 +33,7 @@ class WorkerPool{
 
     ~WorkerPool(){
         pthread_mutex_destroy(&mutex);
+        for(int i=0;i < getAliveWorker();++i) delete pool[i];
     }
 
     bool dispatch_request(const unsigned char* inputBuffer, unsigned char* resultBuffer){
@@ -56,6 +50,7 @@ class WorkerPool{
         pthread_mutex_unlock(&mutex);
         if(!flag) candidate = addWorker(); // Add new WASM Process in it;
         candidate->runCode(inputBuffer, sharedConfig.getInputSize(), resultBuffer, sharedConfig.return_size);
+        return flag;
     }
 
     void try_remove(){
@@ -71,3 +66,10 @@ class WorkerPool{
         pthread_mutex_unlock(&mutex);
     }
 };
+
+static void* daemon_cleaner(void* ptr){
+    while(true){
+        sleep(10);
+        ((WorkerPool*)ptr)->try_remove();
+    }
+}

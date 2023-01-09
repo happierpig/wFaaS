@@ -81,12 +81,12 @@ clean: CMakeFiles/proxy.dir/clean
 CMakeFiles/proxy.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/proxy.dir/build.make CMakeFiles/proxy.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/proxy.dir/build.make CMakeFiles/proxy.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/dreamer/epcc/vFaaS/proxy/build/CMakeFiles --progress-num=1,2,3 "Built target proxy"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/dreamer/epcc/vFaaS/proxy/build/CMakeFiles --progress-num=1,2,3,4 "Built target proxy"
 .PHONY : CMakeFiles/proxy.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/proxy.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dreamer/epcc/vFaaS/proxy/build/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dreamer/epcc/vFaaS/proxy/build/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/proxy.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/dreamer/epcc/vFaaS/proxy/build/CMakeFiles 0
 .PHONY : CMakeFiles/proxy.dir/rule

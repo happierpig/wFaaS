@@ -10,6 +10,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "base64.h"
+
 typedef int PIPE_COMMAND;
 #define PIPE_COMMAND_INPUT 1
 #define PIPE_COMMAND_RETURN 2
@@ -29,6 +31,13 @@ bool startWorker(int *pid, int *infd, int *outfd);
     Tool function to guanrantee the size of reading bytes.
 */
 void readBytes(int fd, unsigned char* buffer, int bufferLength);
+
+/*
+    Tool function used to translate data in json
+*/
+void readFromJson(std::string& raw, uint8_t* ptr, int ptrLen);
+
+std::string writeToJson(uint8_t* ptr, int len);
 
 PIPE_COMMAND readPIPECommand(int fd);
 

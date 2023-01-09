@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/proxy.dir/home/dreamer/epcc/vFaaS/include/base64.cpp.o"
+  "CMakeFiles/proxy.dir/home/dreamer/epcc/vFaaS/include/base64.cpp.o.d"
   "CMakeFiles/proxy.dir/home/dreamer/epcc/vFaaS/include/utils.cpp.o"
   "CMakeFiles/proxy.dir/home/dreamer/epcc/vFaaS/include/utils.cpp.o.d"
   "CMakeFiles/proxy.dir/proxy.cpp.o"

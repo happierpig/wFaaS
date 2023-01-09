@@ -3,6 +3,6 @@ project(proxy VERSION 0.1)
 
 add_compile_options(-pthread)
 
-add_executable(proxy proxy.cpp ../include/utils.cpp) 
+add_executable(proxy proxy.cpp ../include/utils.cpp ../include/base64.cpp) 
 
 target_link_libraries (proxy PUBLIC -lpthread)
