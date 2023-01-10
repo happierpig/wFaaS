@@ -5,6 +5,8 @@
 #include <vector>
 #include <iostream>
 #include <ctime>
+#include <sys/time.h>
+
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -37,7 +39,7 @@ void readBytes(int fd, unsigned char* buffer, int bufferLength);
 */
 void readFromJson(std::string& raw, uint8_t* ptr, int ptrLen);
 
-std::string writeToJson(uint8_t* ptr, int len);
+std::string writeToJson(const uint8_t* ptr, int len);
 
 PIPE_COMMAND readPIPECommand(int fd);
 

@@ -142,6 +142,30 @@ worker/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/worker.dir/build.make CMakeFiles/worker.dir/build
 .PHONY : worker/fast
 
+home/dreamer/epcc/vFaaS/include/base64.o: home/dreamer/epcc/vFaaS/include/base64.cpp.o
+.PHONY : home/dreamer/epcc/vFaaS/include/base64.o
+
+# target to build an object file
+home/dreamer/epcc/vFaaS/include/base64.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/worker.dir/build.make CMakeFiles/worker.dir/home/dreamer/epcc/vFaaS/include/base64.cpp.o
+.PHONY : home/dreamer/epcc/vFaaS/include/base64.cpp.o
+
+home/dreamer/epcc/vFaaS/include/base64.i: home/dreamer/epcc/vFaaS/include/base64.cpp.i
+.PHONY : home/dreamer/epcc/vFaaS/include/base64.i
+
+# target to preprocess a source file
+home/dreamer/epcc/vFaaS/include/base64.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/worker.dir/build.make CMakeFiles/worker.dir/home/dreamer/epcc/vFaaS/include/base64.cpp.i
+.PHONY : home/dreamer/epcc/vFaaS/include/base64.cpp.i
+
+home/dreamer/epcc/vFaaS/include/base64.s: home/dreamer/epcc/vFaaS/include/base64.cpp.s
+.PHONY : home/dreamer/epcc/vFaaS/include/base64.s
+
+# target to generate assembly for a file
+home/dreamer/epcc/vFaaS/include/base64.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/worker.dir/build.make CMakeFiles/worker.dir/home/dreamer/epcc/vFaaS/include/base64.cpp.s
+.PHONY : home/dreamer/epcc/vFaaS/include/base64.cpp.s
+
 home/dreamer/epcc/vFaaS/include/utils.o: home/dreamer/epcc/vFaaS/include/utils.cpp.o
 .PHONY : home/dreamer/epcc/vFaaS/include/utils.o
 
@@ -1000,6 +1024,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... vmlib"
 	@echo "... worker"
+	@echo "... home/dreamer/epcc/vFaaS/include/base64.o"
+	@echo "... home/dreamer/epcc/vFaaS/include/base64.i"
+	@echo "... home/dreamer/epcc/vFaaS/include/base64.s"
 	@echo "... home/dreamer/epcc/vFaaS/include/utils.o"
 	@echo "... home/dreamer/epcc/vFaaS/include/utils.i"
 	@echo "... home/dreamer/epcc/vFaaS/include/utils.s"

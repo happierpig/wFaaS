@@ -4,16 +4,20 @@
 #include <cstdint>
 #include <cstdlib>
 
-
-#define HOST_FUNC __attribute__((weak))
-
 /*
-    Directly return sizeof(arg[index])
+    Directly return sizeof(arg[index]) when bufferLen is zero
 */
-
 int read_input(int argIndex, unsigned char* buffer, int bufferLen);
 
 void set_output(unsigned char* buffer, int bufferLen);
+
+/*
+    Use host to connect proxy server.
+    Return value: 0 for None in States ; 1 for successfully reading
+*/
+int read_state(char* key, unsigned char* buffer, int bufferLen);
+
+void write_state(char* key, unsigned char* buffer, int bufferLen);
 
 uint8_t* wFaaSGetArg(int argIndex, int argLength){
     auto buffer = (unsigned char *)malloc(argLength);

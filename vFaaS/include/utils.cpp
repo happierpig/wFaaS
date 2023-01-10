@@ -74,7 +74,7 @@ void readFromJson(std::string& raw, uint8_t* ptr, int ptrLen){
     std::copy(decodedString.data(), decodedString.data() + size, ptr);
 }
 
-std::string writeToJson(uint8_t* ptr, int len){
+std::string writeToJson(const uint8_t* ptr, int len){
     return base64_encode(ptr, len, false);
 }
 

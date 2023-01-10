@@ -6,6 +6,11 @@
 #include <vector>
 #include <wasm_exec_env.h>
 #include <wasm_export.h>
+#include "../include/httplib.h"
+#include "../include/json.hpp"
+#include "../include/utils.hpp"
+
+using json = nlohmann::json;
 
 std::vector<int> argLengths;
 std::vector<uint8_t*> argCollection;
@@ -26,6 +31,37 @@ static void set_output_native(wasm_exec_env_t exec_env, uint8_t* inBuffer, int32
     std::copy(inBuffer, inBuffer+inLength, resultBuffer);
 }
 
+static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength){
+    std::string stateKey(key);
+
+    json reqData;
+    reqData["key"] = stateKey;
+    httplib::Client cli("127.0.0.1", 18000);
+    auto res = cli.Post("/state/read", reqData.dump(), "application/json");
+    
+    if(res && res->status == 200){
+        auto decodedJson = json::parse(res->body);
+        bool exists = decodedJson["exists"];
+        if(!exists) return 0;
+        std::string valueString = decodedJson["value"];
+        util::readFromJson(valueString, buffer, buffLength);
+        return 1;
+    }else throw "[Host_Iface_Func] Call Proxy Server for Reading state Fails!";
+}
+
+static void write_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength){
+    std::string stateKey(key);
+    std::string stateValue = util::writeToJson(buffer, buffLength);
+    json reqData;
+    reqData["key"] = stateKey;
+    reqData["value"] = stateValue;
+    httplib::Client cli("127.0.0.1", 18000);
+    auto res = cli.Post("/state/write", reqData.dump(), "application/json");
+    
+    if(res && res->status == 200) return;
+    else throw "[Host_Iface_Func] Call Proxy Server for Writing state Fails!";
+}
+
 static NativeSymbol ns[] = {
     {
         "_Z10read_inputiPhi", 	    // the name of WASM function name
@@ -36,5 +72,15 @@ static NativeSymbol ns[] = {
         "_Z10set_outputPhi",
         (void *)set_output_native,
         "(*~)"
+    },
+    {
+        "_Z10read_stateiPhi",
+        (void *)read_state_native,
+        "($*~)i"
+    },
+    {
+        "_Z10write_statePhi",
+        (void *)write_state_native,
+        "($*~)"
     }
 };

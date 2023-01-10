@@ -38,7 +38,7 @@ class wasrModule{
     }
 
     ~wasrModule(){
-      free(resultBuffer);
+      delete [] resultBuffer;
     }
 
     void constructRuntime(){

@@ -226,34 +226,65 @@ CMakeFiles/worker.dir/main.cpp.o: \
  /home/dreamer/epcc/wasm-micro-runtime/core/shared/utils/bh_hashmap.h \
  /home/dreamer/epcc/wasm-micro-runtime/core/iwasm/include/wasm_export.h \
  /home/dreamer/epcc/wasm-micro-runtime/core/iwasm/include/lib_export.h \
- /home/dreamer/epcc/vFaaS/worker/../include/utils.hpp \
- /usr/include/c++/9/cstring /usr/include/c++/9/fstream \
- /usr/include/c++/9/istream /usr/include/c++/9/ios \
- /usr/include/c++/9/iosfwd /usr/include/c++/9/bits/stringfwd.h \
- /usr/include/c++/9/bits/postypes.h /usr/include/c++/9/cwchar \
- /usr/include/wchar.h /usr/include/x86_64-linux-gnu/bits/types/wint_t.h \
+ /home/dreamer/epcc/vFaaS/worker/../include/httplib.h \
+ /usr/include/arpa/inet.h /usr/include/ifaddrs.h /usr/include/net/if.h \
+ /usr/include/netdb.h /usr/include/rpc/netdb.h \
+ /usr/include/x86_64-linux-gnu/bits/netdb.h /usr/include/resolv.h \
+ /usr/include/x86_64-linux-gnu/sys/param.h \
+ /usr/include/x86_64-linux-gnu/bits/param.h /usr/include/linux/param.h \
+ /usr/include/x86_64-linux-gnu/asm/param.h \
+ /usr/include/asm-generic/param.h /usr/include/arpa/nameser.h \
+ /usr/include/arpa/nameser_compat.h \
+ /usr/include/x86_64-linux-gnu/bits/types/res_state.h \
+ /usr/include/netinet/tcp.h /usr/include/c++/9/csignal \
+ /usr/include/x86_64-linux-gnu/sys/un.h /usr/include/c++/9/algorithm \
+ /usr/include/c++/9/utility /usr/include/c++/9/bits/stl_relops.h \
+ /usr/include/c++/9/bits/stl_algo.h \
+ /usr/include/c++/9/bits/algorithmfwd.h \
+ /usr/include/c++/9/bits/stl_heap.h /usr/include/c++/9/bits/stl_tempbuf.h \
+ /usr/include/c++/9/bits/uniform_int_dist.h /usr/include/c++/9/limits \
+ /usr/include/c++/9/array /usr/include/c++/9/stdexcept \
+ /usr/include/c++/9/string /usr/include/c++/9/bits/stringfwd.h \
+ /usr/include/c++/9/bits/char_traits.h /usr/include/c++/9/bits/postypes.h \
+ /usr/include/c++/9/cwchar /usr/include/wchar.h \
+ /usr/include/x86_64-linux-gnu/bits/types/wint_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h \
- /usr/include/c++/9/bits/char_traits.h \
  /usr/include/c++/9/bits/localefwd.h \
  /usr/include/x86_64-linux-gnu/c++/9/bits/c++locale.h \
  /usr/include/c++/9/clocale /usr/include/locale.h \
- /usr/include/x86_64-linux-gnu/bits/locale.h /usr/include/c++/9/cctype \
- /usr/include/c++/9/bits/ios_base.h /usr/include/c++/9/ext/atomicity.h \
- /usr/include/x86_64-linux-gnu/c++/9/bits/gthr.h \
- /usr/include/x86_64-linux-gnu/c++/9/bits/gthr-default.h \
- /usr/include/x86_64-linux-gnu/c++/9/bits/atomic_word.h \
- /usr/include/c++/9/bits/locale_classes.h /usr/include/c++/9/string \
- /usr/include/c++/9/bits/ostream_insert.h \
+ /usr/include/x86_64-linux-gnu/bits/locale.h /usr/include/c++/9/iosfwd \
+ /usr/include/c++/9/cctype /usr/include/c++/9/bits/ostream_insert.h \
  /usr/include/c++/9/bits/cxxabi_forced.h \
  /usr/include/c++/9/bits/stl_function.h \
  /usr/include/c++/9/backward/binders.h \
  /usr/include/c++/9/bits/basic_string.h \
+ /usr/include/c++/9/ext/atomicity.h \
+ /usr/include/x86_64-linux-gnu/c++/9/bits/gthr.h \
+ /usr/include/x86_64-linux-gnu/c++/9/bits/gthr-default.h \
+ /usr/include/x86_64-linux-gnu/c++/9/bits/atomic_word.h \
  /usr/include/c++/9/ext/string_conversions.h /usr/include/c++/9/cstdio \
  /usr/include/c++/9/cerrno /usr/include/c++/9/bits/basic_string.tcc \
- /usr/include/c++/9/bits/locale_classes.tcc \
- /usr/include/c++/9/system_error \
+ /usr/include/c++/9/atomic /usr/include/c++/9/bits/atomic_base.h \
+ /usr/include/c++/9/bits/atomic_lockfree_defines.h \
+ /usr/include/c++/9/cassert /usr/include/c++/9/climits \
+ /usr/include/c++/9/condition_variable /usr/include/c++/9/chrono \
+ /usr/include/c++/9/ratio /usr/include/c++/9/ctime \
+ /usr/include/c++/9/bits/parse_numbers.h \
+ /usr/include/c++/9/bits/std_mutex.h /usr/include/c++/9/system_error \
  /usr/include/x86_64-linux-gnu/c++/9/bits/error_constants.h \
- /usr/include/c++/9/stdexcept /usr/include/c++/9/streambuf \
+ /usr/include/c++/9/bits/unique_lock.h \
+ /usr/include/c++/9/ext/concurrence.h \
+ /usr/include/c++/9/bits/unique_ptr.h /usr/include/c++/9/tuple \
+ /usr/include/c++/9/bits/uses_allocator.h \
+ /usr/include/c++/9/bits/invoke.h /usr/include/c++/9/bits/shared_ptr.h \
+ /usr/include/c++/9/bits/shared_ptr_base.h \
+ /usr/include/c++/9/bits/allocated_ptr.h \
+ /usr/include/c++/9/bits/refwrap.h \
+ /usr/include/c++/9/ext/aligned_buffer.h /usr/include/c++/9/cstring \
+ /usr/include/c++/9/fstream /usr/include/c++/9/istream \
+ /usr/include/c++/9/ios /usr/include/c++/9/bits/ios_base.h \
+ /usr/include/c++/9/bits/locale_classes.h \
+ /usr/include/c++/9/bits/locale_classes.tcc /usr/include/c++/9/streambuf \
  /usr/include/c++/9/bits/streambuf.tcc \
  /usr/include/c++/9/bits/basic_ios.h \
  /usr/include/c++/9/bits/locale_facets.h /usr/include/c++/9/cwctype \
@@ -267,7 +298,59 @@ CMakeFiles/worker.dir/main.cpp.o: \
  /usr/include/c++/9/bits/codecvt.h \
  /usr/include/x86_64-linux-gnu/c++/9/bits/basic_file.h \
  /usr/include/x86_64-linux-gnu/c++/9/bits/c++io.h \
- /usr/include/c++/9/bits/fstream.tcc /usr/include/c++/9/sstream \
+ /usr/include/c++/9/bits/fstream.tcc /usr/include/c++/9/functional \
+ /usr/include/c++/9/bits/std_function.h /usr/include/c++/9/iomanip \
+ /usr/include/c++/9/locale /usr/include/c++/9/bits/locale_facets_nonio.h \
+ /usr/include/x86_64-linux-gnu/c++/9/bits/time_members.h \
+ /usr/include/x86_64-linux-gnu/c++/9/bits/messages_members.h \
+ /usr/include/libintl.h /usr/include/c++/9/bits/locale_facets_nonio.tcc \
+ /usr/include/c++/9/bits/locale_conv.h \
+ /usr/include/c++/9/bits/quoted_string.h /usr/include/c++/9/sstream \
  /usr/include/c++/9/bits/sstream.tcc /usr/include/c++/9/iostream \
- /usr/include/c++/9/ctime \
+ /usr/include/c++/9/list /usr/include/c++/9/bits/stl_list.h \
+ /usr/include/c++/9/bits/list.tcc /usr/include/c++/9/map \
+ /usr/include/c++/9/bits/stl_tree.h /usr/include/c++/9/bits/stl_map.h \
+ /usr/include/c++/9/bits/stl_multimap.h \
+ /usr/include/c++/9/bits/erase_if.h /usr/include/c++/9/memory \
+ /usr/include/c++/9/bits/stl_raw_storage_iter.h \
+ /usr/include/c++/9/bits/shared_ptr_atomic.h \
+ /usr/include/c++/9/backward/auto_ptr.h /usr/include/c++/9/mutex \
+ /usr/include/c++/9/random /usr/include/c++/9/bits/random.h \
+ /usr/include/x86_64-linux-gnu/c++/9/bits/opt_random.h \
+ /usr/include/c++/9/bits/random.tcc /usr/include/c++/9/numeric \
+ /usr/include/c++/9/bits/stl_numeric.h /usr/include/c++/9/regex \
+ /usr/include/c++/9/bitset /usr/include/c++/9/iterator \
+ /usr/include/c++/9/bits/stream_iterator.h /usr/include/c++/9/stack \
+ /usr/include/c++/9/deque /usr/include/c++/9/bits/stl_deque.h \
+ /usr/include/c++/9/bits/deque.tcc /usr/include/c++/9/bits/stl_stack.h \
+ /usr/include/c++/9/bits/regex_constants.h \
+ /usr/include/c++/9/bits/regex_error.h \
+ /usr/include/c++/9/bits/regex_automaton.h \
+ /usr/include/c++/9/bits/regex_automaton.tcc \
+ /usr/include/c++/9/bits/regex_scanner.h \
+ /usr/include/c++/9/bits/regex_scanner.tcc \
+ /usr/include/c++/9/bits/regex_compiler.h \
+ /usr/include/c++/9/bits/regex_compiler.tcc \
+ /usr/include/c++/9/bits/regex.h /usr/include/c++/9/bits/regex.tcc \
+ /usr/include/c++/9/bits/regex_executor.h \
+ /usr/include/c++/9/bits/regex_executor.tcc /usr/include/c++/9/set \
+ /usr/include/c++/9/bits/stl_set.h /usr/include/c++/9/bits/stl_multiset.h \
+ /usr/include/c++/9/thread \
+ /home/dreamer/epcc/vFaaS/worker/../include/json.hpp \
+ /usr/include/c++/9/cstddef /usr/include/c++/9/forward_list \
+ /usr/include/c++/9/bits/forward_list.h \
+ /usr/include/c++/9/bits/forward_list.tcc \
+ /usr/include/c++/9/unordered_map /usr/include/c++/9/bits/hashtable.h \
+ /usr/include/c++/9/bits/hashtable_policy.h \
+ /usr/include/c++/9/bits/unordered_map.h /usr/include/c++/9/valarray \
+ /usr/include/c++/9/bits/valarray_array.h \
+ /usr/include/c++/9/bits/valarray_array.tcc \
+ /usr/include/c++/9/bits/valarray_before.h \
+ /usr/include/c++/9/bits/slice_array.h \
+ /usr/include/c++/9/bits/valarray_after.h \
+ /usr/include/c++/9/bits/gslice.h /usr/include/c++/9/bits/gslice_array.h \
+ /usr/include/c++/9/bits/mask_array.h \
+ /usr/include/c++/9/bits/indirect_array.h /usr/include/c++/9/version \
+ /home/dreamer/epcc/vFaaS/worker/../include/utils.hpp \
+ /home/dreamer/epcc/vFaaS/worker/../include/base64.h \
  /home/dreamer/epcc/vFaaS/worker/../include/functionConfig.hpp

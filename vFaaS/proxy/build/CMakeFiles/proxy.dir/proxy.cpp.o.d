@@ -287,6 +287,7 @@ CMakeFiles/proxy.dir/proxy.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/struct_statx.h \
  /usr/include/c++/9/thread \
  /home/dreamer/epcc/vFaaS/proxy/../include/utils.hpp \
+ /usr/include/x86_64-linux-gnu/sys/time.h \
  /home/dreamer/epcc/vFaaS/proxy/../include/base64.h \
  /home/dreamer/epcc/vFaaS/proxy/../include/json.hpp \
  /usr/include/c++/9/cstddef /usr/include/c++/9/forward_list \
@@ -305,4 +306,5 @@ CMakeFiles/proxy.dir/proxy.cpp.o: \
  /usr/include/c++/9/bits/indirect_array.h /usr/include/c++/9/version \
  /home/dreamer/epcc/vFaaS/proxy/WorkerPool.hpp \
  /home/dreamer/epcc/vFaaS/proxy/WorkerUnit.hpp \
- /home/dreamer/epcc/vFaaS/proxy/../include/functionConfig.hpp
+ /home/dreamer/epcc/vFaaS/proxy/../include/functionConfig.hpp \
+ /home/dreamer/epcc/vFaaS/proxy/LocalStorage.hpp
