@@ -24,6 +24,7 @@ class WorkerPool{
     public:
 
     WorkerPool(){
+        sharedConfig.setFromFile(functionConfigPath);
         pthread_mutex_init(&mutex, NULL);
         pool.push_back(new WorkerUnit(30)); // The first process last more time.
         // Update daemon thread
@@ -42,22 +43,27 @@ class WorkerPool{
         pthread_mutex_lock(&mutex);
         for(int i = 0;i < getAliveWorker();++i){
             candidate = pool[i];
+            std::cout << "[Dispatch] Test the " << i << "-th worker "; // debug
             if(candidate->tryOccupy()){
+                std::cout << "Success" << std::endl; // debug
                 flag = true;
                 break;
-            }
+            }else std::cout << "Fail" << std::endl; // debug
         }
         pthread_mutex_unlock(&mutex);
         if(!flag) candidate = addWorker(); // Add new WASM Process in it;
         candidate->runCode(inputBuffer, sharedConfig.getInputSize(), resultBuffer, sharedConfig.return_size);
+        candidate->setIdle(true);
         return flag;
     }
 
     void try_remove(){
+        if(getAliveWorker() == 0) return;
         pthread_mutex_lock(&mutex);
         WorkerUnit* ptr = pool[getAliveWorker() - 1];
         bool flag = ptr->tryOccupy();
         if((!flag) || ptr->checkValid()){
+            ptr->setIdle(true);
             pthread_mutex_unlock(&mutex);
             return;
         }
