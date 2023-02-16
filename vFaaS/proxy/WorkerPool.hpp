@@ -12,8 +12,8 @@ class WorkerPool{
         return pool.size();
     }
 
-    WorkerUnit* addWorker(){
-        WorkerUnit* ptr = new WorkerUnit();
+    WorkerUnit* addWorker(int _id){
+        WorkerUnit* ptr = new WorkerUnit(_id);
         ptr->tryOccupy();
         pthread_mutex_lock(&mutex);
         pool.push_back(ptr);
@@ -26,7 +26,7 @@ class WorkerPool{
     WorkerPool(){
         sharedConfig.setFromFile(functionConfigPath);
         pthread_mutex_init(&mutex, NULL);
-        pool.push_back(new WorkerUnit(30)); // The first process last more time.
+        pool.push_back(new WorkerUnit(30, 0)); // The first process last more time.
         // Update daemon thread
         pthread_t ppid;
         pthread_create(&ppid, NULL, daemon_cleaner, (void*)this);
@@ -41,6 +41,10 @@ class WorkerPool{
         WorkerUnit* candidate = nullptr;
         bool flag = false;
         pthread_mutex_lock(&mutex);
+
+        // debug
+        int _id = getAliveWorker();
+
         for(int i = 0;i < getAliveWorker();++i){
             candidate = pool[i];
             std::cout << "[Dispatch] Test the " << i << "-th worker "; // debug
@@ -51,7 +55,7 @@ class WorkerPool{
             }else std::cout << "Fail" << std::endl; // debug
         }
         pthread_mutex_unlock(&mutex);
-        if(!flag) candidate = addWorker(); // Add new WASM Process in it;
+        if(!flag) candidate = addWorker(_id); // Add new WASM Process in it; May cause id bug but no problem
         candidate->runCode(inputBuffer, sharedConfig.getInputSize(), resultBuffer, sharedConfig.return_size);
         candidate->setIdle(true);
         return flag;
@@ -61,7 +65,7 @@ class WorkerPool{
         if(getAliveWorker() == 0) return;
         pthread_mutex_lock(&mutex);
         WorkerUnit* ptr = pool[getAliveWorker() - 1];
-        bool flag = ptr->tryOccupy();
+        bool flag = ptr->tryOccupy(); // Maybe in running
         if((!flag) || ptr->checkValid()){
             ptr->setIdle(true);
             pthread_mutex_unlock(&mutex);

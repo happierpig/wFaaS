@@ -12,6 +12,8 @@ class WorkerUnit{
         int readPipe;
         int writePipe;
 
+        int id;
+
         time_t timeStamp;
         double expireTime = 15;
 
@@ -27,7 +29,8 @@ class WorkerUnit{
         }
 
     public:
-        WorkerUnit(){
+        WorkerUnit(int _id){
+            id = _id;
             idle = true;
             timeStamp = time(nullptr);
             if(! util::startWorker(&workerPid, &writePipe, &readPipe))
@@ -35,12 +38,14 @@ class WorkerUnit{
             pthread_mutex_init(&mutex, NULL);
         }
 
-        WorkerUnit(double _expireTime){
+        WorkerUnit(double _expireTime, int _id){
+            id = _id;
             idle = true;
             timeStamp = time(nullptr);
             expireTime = _expireTime;
             if(! util::startWorker(&workerPid, &writePipe, &readPipe))
                 throw "Fail to create a Process";
+            
             pthread_mutex_init(&mutex, NULL);
         }
 
@@ -59,8 +64,11 @@ class WorkerUnit{
 
             this->readMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
             this->readMsg((unsigned char *)result, outputLength);
-            std::cout << "[PIPE] msg from the other side: " << cmd << "  " << (char*)result << std::endl;
+            std::cout << "[PIPE] msg from the other side: " << cmd << "  " << *((int*)result) << std::endl;
             this->timeStamp = time(nullptr); // Update the last running time
+
+            //debug
+            std::cout << "[WorkerUnit] " << this->id << " running completes." << std::endl;
         }
 
         bool tryOccupy(){
@@ -78,6 +86,8 @@ class WorkerUnit{
         }
 
         bool checkValid(){
+            // debug
+            std::cout << "[Expire] Checking " << this->id << "'s Validity: " << ((difftime(time(nullptr), timeStamp) < expireTime) ? "True" : "False") << std::endl;
             return (difftime(time(nullptr), timeStamp) < expireTime);
         }
 };

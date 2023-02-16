@@ -1,9 +1,6 @@
 #include "native.hpp"
-#include "../include/utils.hpp"
 #include "../include/functionConfig.hpp"
 
-static std::string wasmFilePath = "../wasmCode/test.wasm";
-static const char* functionConfigPath = "../wasmCode/func.config";
 
 class wasrModule{
   private:
@@ -31,13 +28,15 @@ class wasrModule{
       funcConfig.setFromFile(functionConfigPath);
       util::readFileToBytes(wasmFilePath, codeBytes);
       resultBuffer = new uint8_t[funcConfig.return_size];
-
+      memset(resultBuffer, 0, funcConfig.return_size);
       argCollection.resize(funcConfig.argc);
       argLengths = funcConfig.argsv;
       resultLength = funcConfig.return_size;
+      this->constructRuntime();
     }
 
     ~wasrModule(){
+      this->deconstructRuntime();
       delete [] resultBuffer;
     }
 

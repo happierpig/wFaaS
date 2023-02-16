@@ -1,8 +1,7 @@
 #include "worker.hpp"
-#include <stdlib.h>
 
 int main(){
-    srand(time(NULL));
+    std::cout << "[Worker] New Worker!!" << std::endl;
     wasrModule wasmRuntime;
     int _inputSize = wasmRuntime.getInputSize(), _returnSize = wasmRuntime.getReturnSize();
     auto inputBuffer = new unsigned char[_inputSize];

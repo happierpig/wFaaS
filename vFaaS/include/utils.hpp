@@ -1,3 +1,6 @@
+#ifndef _UTILS_H_
+#define _UTILS_H_
+
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -17,6 +20,9 @@
 typedef int PIPE_COMMAND;
 #define PIPE_COMMAND_INPUT 1
 #define PIPE_COMMAND_RETURN 2
+
+extern std::string wasmFilePath;
+extern const char* functionConfigPath;
 
 namespace util{
 /*
@@ -45,3 +51,5 @@ PIPE_COMMAND readPIPECommand(int fd);
 
 void writePIPECommand(int fd, PIPE_COMMAND cmd);
 }
+
+#endif

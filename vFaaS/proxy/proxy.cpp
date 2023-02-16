@@ -1,3 +1,5 @@
+// #define DEBUG
+
 #include "../include/httplib.h"
 #include "../include/utils.hpp"
 #include "../include/json.hpp"
@@ -45,15 +47,36 @@ int main(){
     */
     svr.Post("/run", [](const httplib::Request& req, httplib::Response& res) {
         auto decodedJson = json::parse(req.body);
+
+        #ifdef DEBUG
+        std::cout << "[Proxy] Request Running: " << decodedJson.dump() << std::endl; 
+        #endif
+
         std::string inputString = decodedJson["input"];
         uint8_t* inputBuffer = new uint8_t[sharedConfig.getInputSize()];
         uint8_t* returnBuffer = new uint8_t[sharedConfig.return_size];
+
+        #ifdef DEBUG
+        memset(returnBuffer, 0, sharedConfig.return_size);
+        std::cout << "[Proxy] 0. " << inputString << std::endl; 
+        std::cout << "[Proxy] Check Endian." << std::endl;
+        int tmpx = 1;
+        char* tmpy = (char*)(&tmpx);
+        if(*tmpy) std::cout << "Little Endian" << std::endl;
+        else std::cout << "Big Endian" << std::endl;
+        #endif
+
         util::readFromJson(inputString, inputBuffer, sharedConfig.getInputSize());
 
         timeval startTime, endTime;
         gettimeofday(&startTime, NULL);
         bool newWorker = runner.dispatch_request(inputBuffer, returnBuffer);
         gettimeofday(&endTime, NULL);
+
+        #ifdef DEBUG
+        std::cout << "[Proxy] 2." << std::endl; 
+        std::cout << "Return Value :" << *((int*)(returnBuffer)) << std::endl;
+        #endif
 
         json data;
         std::string returnString = "";
@@ -66,6 +89,11 @@ int main(){
 
         delete [] inputBuffer;
         delete [] returnBuffer;
+
+        #ifdef DEBUG
+        std::cout << "[Proxy] 3." << std::endl; 
+        #endif
+
         res.set_content(data.dump(), "application/json");
     });
 
@@ -95,5 +123,6 @@ int main(){
         res.status = 200;
     });
 
+    std::cout << "[Proxy] Start running." << std::endl;
     svr.listen("127.0.0.1", 18000);
 }

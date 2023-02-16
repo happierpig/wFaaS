@@ -1,5 +1,8 @@
 #include "utils.hpp"
 
+std::string wasmFilePath = "/home/dreamer/epcc/vFaaS/wasmCode/test.wasm";
+const char* functionConfigPath = "/home/dreamer/epcc/vFaaS/wasmCode/func.config";
+
 namespace util{
 
 void readFileToBytes(const std::string& path, std::vector<uint8_t>& codeBytes){
@@ -33,11 +36,9 @@ bool startWorker(int *pid, int *infd, int *outfd){
     } else {
         /* Child process. */
         dup2(p1[0], 0); // redirect stdin
-        dup2(p2[1], 1); // redirect stdout
-        close(p1[0]);
+        dup2(p2[1], 10); // 10 is just an arbitrary file descriptor which avoids collision from stdout
         close(p1[1]);
         close(p2[0]);
-        close(p2[1]);
         execv(command[0], command);
         /* Error occured. */
         fprintf(stderr, "error running %s: %s", command[0], strerror(errno));
