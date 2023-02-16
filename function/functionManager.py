@@ -24,7 +24,6 @@ class functionManager:
         os.system('docker rm -f $(docker ps -aq --filter label=wFaaS)')
         gevent.spawn_later(dispatch_interval, self._dispatch_loop)
 
-    # todo: What does spawn_later do?
     def _dispatch_loop(self):
         gevent.spawn_later(dispatch_interval, self._dispatch_loop)
         for function in self.functions.values():

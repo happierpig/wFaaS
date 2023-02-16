@@ -9,7 +9,7 @@ cgroup_path = '/sys/fs/cgroup/{}/docker/{}'
 class Container:
     # create a new container and return the wrapper (ps: the unit of memory is Mb)
     @classmethod
-    def create(cls, client, image_name, port, attr, concurrency = 3, memory = 128, cpuRes = 0.2):
+    def create(cls, client, image_name, port, attr, isMain, mainIp = "", concurrency = 3, memory = 128, cpuRes = 0.2):
         container = client.containers.run(image_name,
                                           detach=True,
                                           init=True,
@@ -19,7 +19,7 @@ class Container:
                                           mem_limit='128m',
                                           ports={'23333/tcp': str(port)},
                                           labels=['wFaaS'])
-        res = cls(container, port, attr, concurrency, memory, cpuRes)
+        res = cls(container, port, attr, isMain, mainIp, concurrency, memory, cpuRes)
         res.wait_start()
         return res
 
@@ -30,10 +30,12 @@ class Container:
         container = client.containers.get(container_id)
         return cls(container, port, attr)
 
-    def __init__(self, container, port, attr, concurrency, memory, cpuRes):
+    def __init__(self, container, port, attr, isMain, mainIp, concurrency, memory, cpuRes):
         self.container = container
         self.port = port
         self.attr = attr
+        self.isMain = isMain
+        self.mainIp = mainIp
         self.lasttime = time.time()
 
         self.concurrency = concurrency
@@ -49,6 +51,9 @@ class Container:
         raw = self.container.top()['Processes']
         return [unit[1] for unit in raw]
         
+    def get_status(self):
+        return ((requests.get(base_url.format(self.port, 'status'))).json())["status"]
+
     # wait for the container cold start
     def wait_start(self):
         while True:
@@ -72,7 +77,7 @@ class Container:
         r = requests.post(base_url.format(self.port, 'run'), json=data)
         self.lasttime = time.time()
         resp = r.json()
-        if(resp['new_worker'] == False): # New worker exists
+        if(resp['new_worker'] == False): # TODO: How to deal with the restriciton after creating?
             self.add_cputLimits()
             self.add_memoryLimits()
         print(resp)
@@ -83,8 +88,10 @@ class Container:
         data = {
             'function': function_name,
             'concurrency': self.concurrency,
-            'id': self.containerID
-            }
+            'id': self.containerID,
+            'isMain': self.isMain,
+            'ip': self.mainIp
+        }
         r = requests.post(base_url.format(self.port, 'init'), json=data)
         self.lasttime = time.time()
         # self.pidList = r.json()['pid_list'] # Fake Pids in Container Namespace

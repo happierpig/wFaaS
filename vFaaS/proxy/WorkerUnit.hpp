@@ -5,6 +5,9 @@
 #include <pthread.h>
 
 functionConfiguration sharedConfig;
+extern bool isMain;
+extern std::string mainIp;
+extern LocalStorage states;
 
 class WorkerUnit{
     private:
@@ -61,14 +64,76 @@ class WorkerUnit{
             PIPE_COMMAND cmd = PIPE_COMMAND_INPUT;
             this->sendMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
             this->sendMsg(inputBuffer, bufferLength);
-
-            this->readMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
-            this->readMsg((unsigned char *)result, outputLength);
-            std::cout << "[PIPE] msg from the other side: " << cmd << "  " << *((int*)result) << std::endl;
-            this->timeStamp = time(nullptr); // Update the last running time
-
-            //debug
-            std::cout << "[WorkerUnit] " << this->id << " running completes." << std::endl;
+            while(true){
+                this->readMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
+                if(cmd == PIPE_COMMAND_RETURN){
+                    this->readMsg((unsigned char *)result, outputLength);
+                    std::cout << "[PIPE] msg from the other side: " << cmd << "  " << *((int*)result) << std::endl;
+                    this->timeStamp = time(nullptr); // Update the last running time
+                    //debug
+                    std::cout << "[WorkerUnit] " << this->id << " running completes." << std::endl;
+                    break;
+                }else if(cmd == PIPE_COMMAND_STATE_READ){
+                    int keyLength, resultLength;
+                    this->readMsg((unsigned char*)(&keyLength), sizeof(int));
+                    this->readMsg((unsigned char*)(&resultLength), sizeof(int));
+                    char * key = new char[keyLength];
+                    uint8_t* resultBuffer = new uint8_t[resultLength];
+                    this->readMsg((unsigned char*)key, keyLength);
+                    std::string stateKey(key);
+                    std::string value = "";
+                    bool exists;
+                    if(isMain){
+                        exists = states.readState(stateKey, value);
+                    }else{
+                        json reqData;
+                        reqData["key"] = stateKey;
+                        httplib::Client cli(mainIp, 18000);
+                        auto res = cli.Post("/state/read", reqData.dump(), "application/json");
+                        if(res && res->status == 200){
+                            auto decodedJson = json::parse(res->body);
+                            exists = decodedJson["exists"];
+                            value = decodedJson["value"];
+                        }else exists = false; // Attention : maybe is network problem.
+                    }
+                    if(exists){
+                        cmd = PIPE_COMMAND_STATE_FOUND;
+                        this->sendMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
+                        util::readFromJson(value, resultBuffer, resultLength);
+                        this->sendMsg(resultBuffer, resultLength);
+                    }else{
+                        cmd = PIPE_COMMAND_STATE_NOT_FOUND;
+                        this->sendMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
+                    }
+                    delete [] key;
+                    delete [] resultBuffer;
+                }else if(cmd == PIPE_COMMAND_STATE_WRITE){
+                    int keyLength,valueLength;
+                    this->readMsg((unsigned char*)(&keyLength), sizeof(int));
+                    this->readMsg((unsigned char*)(&valueLength), sizeof(int));
+                    char *key = new char[keyLength];
+                    uint8_t* valueBuffer = new uint8_t[valueLength];
+                    this->readMsg((unsigned char*)key, keyLength);
+                    this->readMsg((unsigned char*)valueBuffer, valueLength);
+                    std::string stateKey(key);
+                    std::string stateValue = util::writeToJson(valueBuffer, valueLength);
+                    bool success = true;
+                    if(isMain) states.writeState(stateKey, stateValue);
+                    else{
+                        json reqData;
+                        reqData["key"] = stateKey;
+                        reqData["value"] = stateValue;
+                        httplib::Client cli(mainIp, 18000);
+                        auto res = cli.Post("/state/write", reqData.dump(), "application/json");
+                        if(res && res->status == 200) success = true;
+                        else success = false;
+                    }
+                    cmd = ((success == true) ? PIPE_COMMAND_STATE_FOUND : PIPE_COMMAND_STATE_NOT_FOUND);
+                    this->sendMsg((unsigned char *) cmd, sizeof(PIPE_COMMAND));
+                    delete [] key;
+                    delete [] valueBuffer;
+                }
+            }
         }
 
         bool tryOccupy(){

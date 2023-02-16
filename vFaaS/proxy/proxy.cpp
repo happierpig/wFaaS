@@ -11,10 +11,11 @@ using json = nlohmann::json;
 WorkerPool runner;
 LocalStorage states;
 
-std::string status = "ok";
+std::string status = "idle"; // idle init ok run
 std::string functionName;
 std::string containerID;
-
+bool isMain = false;
+std::string mainIp = "";
 
 
 int main(){
@@ -38,6 +39,8 @@ int main(){
         auto decodedJson = json::parse(req.body);
         functionName = decodedJson["function"];
         containerID = decodedJson["id"];
+        isMain = decodedJson["isMain"];
+        mainIp = decodedJson["ip"];
         status = "ok";
         res.status = 200;
     });

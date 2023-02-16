@@ -1,43 +1,79 @@
 from functionInfo import FunctionInfo
 from functionSet import RequestInfo
 from container import Container
-import os
-import socket
+from gevent.lock import BoundedSemaphore
+import gevent
 
-socket_address = '/tmp/{}_{}/pipe'
+clean_interval = 5 # TODO
 
 # functionUnit class abstract single User's Single Function
+# Embedded Session Scheduler
 class FunctionUnit:
     def __init__(self, dockerClient, portMan, userID, funcInfo):
         self.userID = userID
         self.funcInfo = funcInfo
         self.dockerClient = dockerClient
         self.portMan = portMan
-        self.pipeAddress = socket_address.format(funcInfo.function_name, userID)
-        self.pipe = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        if os.path.exists(self.pipeAddress):
-            os.unlink(self.pipeAddress)
-        self.pipe.bind(self.pipeAddress)
-        self.pipe.listen(5)
+
+        self.lock = BoundedSemaphore(1)
+        self.workerCount = 0
+        self.workers = []
+        self.maxTaskLimits = []
+        self.nowTasks = []
 
         # todo : 1. check portMan's thread-safe 2. add necessary info into function info.
     
-    # Function for initializing the wasm processes ; todo : add data structure
+    # Function for initializing the wasm processes
     def init(self):
-        self.worker = Container.create(self.dockerClient, self.funcInfo.img_name, self.portMan.get(), 'exec')
-        self.worker.init(self.funcInfo.function_name)
+        self.workers.append(Container.create(self.dockerClient, self.funcInfo.img_name, self.portMan.get(), 'exec'))
+        self.workers[0].init(self.funcInfo.function_name)
+        self.maxTaskLimits.append(10)
+        self.nowTasks.append(0)
+        self.workerCount = 1
+        
+        gevent.spawn_later(clean_interval, self.daemon_cleaner)
 
     def send_request(self, requestInfo):
-        ret = self.worker.send_request(requestInfo.data)
-        requestInfo.result.set(ret)
-    
-    # Should be called by thread
-    def daemon_cleaner(self):
-        while(True):
-            con, addr = self.pipe.accept()
-            victimId = con.recv(1024) # The container ID to be deleted
-            # todo : select the one in the data structure
-            con.close()
-            self.worker.destroy()
-            self.worker = None
+        candidateWorker = None
+        self.lock.acquire()
+        for i in range(0, self.workerCount):
+            if self.nowTasks[i] < self.maxTaskLimits[i]:
+                candidateWorker = i
+                break
 
+        if candidateWorker == None: # All container full and we need add one 
+            self.workers.insert(self.workerCount, Container.create(self.dockerClient, self.funcInfo.img_name, self.portMan.get(), 'exec'))
+            self.maxTaskLimits.insert(self.workerCount, 10)
+            self.nowTasks.insert(self.workerCount, 0)
+            self.workers[self.workerCount].init(self.funcInfo.function_name)
+            candidateWorker = self.workerCount
+            self.workerCount += 1
+        self.nowTasks[candidateWorker] += 1
+        self.lock.release()
+
+        ret = self.workers[candidateWorker].send_request(requestInfo.data)
+
+        self.lock.acquire()
+        self.nowTasks[candidateWorker] -= 1
+        self.lock.release()
+        
+        requestInfo.result.set(ret)
+
+    def container_cleaner(self):
+        self.lock.acquire()
+        candidateWorker = self.workerCount - 1
+        if (candidateWorker < 0) or (self.nowTasks[candidateWorker] > 0) :
+            self.lock.release()
+            return
+        if self.workers[candidateWorker].get_status() != "idle":
+            self.lock.release()
+            return
+        self.portMan.put(self.workers[candidateWorker].port)
+        self.workers[candidateWorker].destroy()
+        self.workers.pop(candidateWorker)
+        self.workerCount -= 1
+        self.lock.release()
+    
+    def daemon_cleaner(self):
+        self.container_cleaner()
+        gevent.spawn_later(clean_interval, self.daemon_cleaner)

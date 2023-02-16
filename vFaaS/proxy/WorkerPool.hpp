@@ -2,6 +2,8 @@
 
 static void* daemon_cleaner(void* ptr);
 
+extern std::string status; // from Proxy.cpp
+
 class WorkerPool{
     private:
 
@@ -41,7 +43,6 @@ class WorkerPool{
         WorkerUnit* candidate = nullptr;
         bool flag = false;
         pthread_mutex_lock(&mutex);
-
         // debug
         int _id = getAliveWorker();
 
@@ -55,7 +56,10 @@ class WorkerPool{
             }else std::cout << "Fail" << std::endl; // debug
         }
         pthread_mutex_unlock(&mutex);
-        if(!flag) candidate = addWorker(_id); // Add new WASM Process in it; May cause id bug but no problem
+        if(!flag){
+            candidate = addWorker(_id); // Add new WASM Process in it; May cause id bug but no problem
+            status = "run";
+        }
         candidate->runCode(inputBuffer, sharedConfig.getInputSize(), resultBuffer, sharedConfig.return_size);
         candidate->setIdle(true);
         return flag;
@@ -73,6 +77,7 @@ class WorkerPool{
         }
         delete ptr;
         pool.pop_back();
+        if(getAliveWorker() == 0) status = "idle";
         pthread_mutex_unlock(&mutex);
     }
 };

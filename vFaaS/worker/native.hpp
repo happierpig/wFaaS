@@ -32,34 +32,27 @@ static void set_output_native(wasm_exec_env_t exec_env, uint8_t* inBuffer, int32
 }
 
 static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength){
-    std::string stateKey(key);
-
-    json reqData;
-    reqData["key"] = stateKey;
-    httplib::Client cli("127.0.0.1", 18000);
-    auto res = cli.Post("/state/read", reqData.dump(), "application/json");
-    
-    if(res && res->status == 200){
-        auto decodedJson = json::parse(res->body);
-        bool exists = decodedJson["exists"];
-        if(!exists) return 0;
-        std::string valueString = decodedJson["value"];
-        util::readFromJson(valueString, buffer, buffLength);
+    PIPE_COMMAND cmd = PIPE_COMMAND_STATE_READ;
+    int keyLength = strlen(key) + 1;
+    write(10, (unsigned char*)(&keyLength), sizeof(int));
+    write(10, (unsigned char*)(&buffLength), sizeof(int));
+    write(10, (unsigned char*) key, keyLength);
+    util::readBytes(0, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
+    if(cmd == PIPE_COMMAND_STATE_NOT_FOUND) return 0;
+    else{
+        util::readBytes(0, (unsigned char*)buffer, buffLength);
         return 1;
-    }else throw "[Host_Iface_Func] Call Proxy Server for Reading state Fails!";
+    }
 }
 
 static void write_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength){
-    std::string stateKey(key);
-    std::string stateValue = util::writeToJson(buffer, buffLength);
-    json reqData;
-    reqData["key"] = stateKey;
-    reqData["value"] = stateValue;
-    httplib::Client cli("127.0.0.1", 18000);
-    auto res = cli.Post("/state/write", reqData.dump(), "application/json");
-    
-    if(res && res->status == 200) return;
-    else throw "[Host_Iface_Func] Call Proxy Server for Writing state Fails!";
+    PIPE_COMMAND cmd = PIPE_COMMAND_STATE_WRITE;
+    int keyLength = strlen(key) + 1;
+    write(10, (unsigned char*)(&keyLength), sizeof(int));
+    write(10, (unsigned char*)(&buffLength), sizeof(int));
+    write(10, (unsigned char*)key, keyLength);
+    write(10, (unsigned char*)buffer, buffLength);
+    //todo: whether to wait?
 }
 
 static NativeSymbol ns[] = {
