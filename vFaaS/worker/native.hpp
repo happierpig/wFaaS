@@ -6,11 +6,7 @@
 #include <vector>
 #include <wasm_exec_env.h>
 #include <wasm_export.h>
-#include "../include/httplib.h"
-#include "../include/json.hpp"
 #include "../include/utils.hpp"
-
-using json = nlohmann::json;
 
 std::vector<int> argLengths;
 std::vector<uint8_t*> argCollection;
@@ -33,6 +29,8 @@ static void set_output_native(wasm_exec_env_t exec_env, uint8_t* inBuffer, int32
 
 static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength){
     PIPE_COMMAND cmd = PIPE_COMMAND_STATE_READ;
+    write(10, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
+
     int keyLength = strlen(key) + 1;
     write(10, (unsigned char*)(&keyLength), sizeof(int));
     write(10, (unsigned char*)(&buffLength), sizeof(int));
@@ -45,14 +43,17 @@ static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffe
     }
 }
 
-static void write_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength){
+static int write_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength){
     PIPE_COMMAND cmd = PIPE_COMMAND_STATE_WRITE;
+    write(10, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
+
     int keyLength = strlen(key) + 1;
     write(10, (unsigned char*)(&keyLength), sizeof(int));
     write(10, (unsigned char*)(&buffLength), sizeof(int));
     write(10, (unsigned char*)key, keyLength);
     write(10, (unsigned char*)buffer, buffLength);
-    //todo: whether to wait?
+    util::readBytes(0, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
+    return ((cmd == PIPE_COMMAND_STATE_FOUND) ? 1 : 0);
 }
 
 static NativeSymbol ns[] = {
@@ -72,8 +73,8 @@ static NativeSymbol ns[] = {
         "($*~)i"
     },
     {
-        "_Z10write_statePhi",
+        "_Z10write_stateiPhi",
         (void *)write_state_native,
-        "($*~)"
+        "($*~)i"
     }
 };
