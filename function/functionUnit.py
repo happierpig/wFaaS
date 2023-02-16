@@ -21,17 +21,24 @@ class FunctionUnit:
         self.maxTaskLimits = []
         self.nowTasks = []
 
+        self.mainIp = None
+
         # todo : 1. check portMan's thread-safe 2. add necessary info into function info.
     
     # Function for initializing the wasm processes
     def init(self):
-        self.workers.append(Container.create(self.dockerClient, self.funcInfo.img_name, self.portMan.get(), 'exec'))
+        self.workers.append(Container.create(self.dockerClient, self.funcInfo.img_name, self.portMan.get(), 'exec', True))
         self.workers[0].init(self.funcInfo.function_name)
+        self.mainIp = self.get_main_ip()
         self.maxTaskLimits.append(10)
         self.nowTasks.append(0)
         self.workerCount = 1
         
         gevent.spawn_later(clean_interval, self.daemon_cleaner)
+
+    def get_main_ip(self):
+        return self.dockerClient.api.inspect_container(self.workers[0].containerID)['NetworkSettings']['IPAddress']
+
 
     def send_request(self, requestInfo):
         candidateWorker = None
@@ -42,12 +49,19 @@ class FunctionUnit:
                 break
 
         if candidateWorker == None: # All container full and we need add one 
-            self.workers.insert(self.workerCount, Container.create(self.dockerClient, self.funcInfo.img_name, self.portMan.get(), 'exec'))
+            if self.workerCount == 0:
+                self.workers.insert(self.workerCount, Container.create(self.dockerClient, self.funcInfo.img_name,
+                        self.portMan.get(), 'exec', True))
+                self.mainIp = self.get_main_ip()
+            else:
+                self.workers.insert(self.workerCount, Container.create(self.dockerClient, self.funcInfo.img_name, 
+                        self.portMan.get(), 'exec', False, self.mainIp))
             self.maxTaskLimits.insert(self.workerCount, 10)
             self.nowTasks.insert(self.workerCount, 0)
             self.workers[self.workerCount].init(self.funcInfo.function_name)
             candidateWorker = self.workerCount
             self.workerCount += 1
+            
         self.nowTasks[candidateWorker] += 1
         self.lock.release()
 
