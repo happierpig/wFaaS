@@ -1,3 +1,6 @@
+#ifndef _WORKERPOOL_H
+#define _WORKERPOOL_H
+
 #include "WorkerUnit.hpp"
 
 static void* daemon_cleaner(void* ptr);
@@ -88,3 +91,5 @@ static void* daemon_cleaner(void* ptr){
         ((WorkerPool*)ptr)->try_remove();
     }
 }
+
+#endif

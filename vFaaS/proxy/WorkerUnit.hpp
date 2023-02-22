@@ -1,8 +1,14 @@
+#ifndef _WORKERUNIT_H
+#define _WORKERUNIT_H
+
 #include "../include/utils.hpp"
 #include <sys/types.h>
 #include <signal.h>
 #include "../include/functionConfig.hpp"
 #include <pthread.h>
+#include "LocalStorage.hpp"
+
+using json = nlohmann::json;
 
 functionConfiguration sharedConfig;
 extern bool isMain;
@@ -156,3 +162,5 @@ class WorkerUnit{
             return (difftime(time(nullptr), timeStamp) < expireTime);
         }
 };
+
+#endif

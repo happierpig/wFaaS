@@ -1,3 +1,6 @@
+#ifndef _LOCALSTORAGE_H
+#define _LOCALSTORAGE_H
+
 #include <map>
 #include <pthread.h>
 
@@ -33,3 +36,5 @@ class LocalStorage{
         pthread_rwlock_unlock(&mutex);
     }
 };
+
+#endif
