@@ -1,10 +1,19 @@
 from functionInfo import FunctionInfo
-from functionSet import RequestInfo
 from container import Container
 from gevent.lock import BoundedSemaphore
+from gevent import event
 import gevent
+import time
 
 clean_interval = 5 # TODO
+
+class RequestInfo:
+    def __init__(self, requestID, data, userID):
+        self.userID = userID
+        self.requestID = requestID
+        self.data = data
+        self.result = event.AsyncResult()
+        self.arrival = time.time()
 
 # functionUnit class abstract single User's Single Function
 # Embedded Session Scheduler
@@ -61,6 +70,7 @@ class FunctionUnit:
             self.workers[self.workerCount].init(self.funcInfo.function_name)
             candidateWorker = self.workerCount
             self.workerCount += 1
+            print("[SessionScheduler] Add ", self.workerCount, "th Container")
             
         self.nowTasks[candidateWorker] += 1
         self.lock.release()
@@ -86,6 +96,7 @@ class FunctionUnit:
         self.workers[candidateWorker].destroy()
         self.workers.pop(candidateWorker)
         self.workerCount -= 1
+        print("[SessionScheduler] Remove", candidateWorker+1, "th Container")
         self.lock.release()
     
     def daemon_cleaner(self):

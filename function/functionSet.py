@@ -1,15 +1,6 @@
-from gevent import event
 from functionInfo import FunctionInfo
 from functionUnit import FunctionUnit
-import time
-
-class RequestInfo:
-    def __init__(self, requestID, data, userID):
-        self.userID = userID
-        self.requestID = requestID
-        self.data = data
-        self.result = event.AsyncResult()
-        self.arrival = time.time()
+from functionUnit import RequestInfo
 
 # FunctionSet represents all functionUnit with same function
 class FunctionSet:
