@@ -1,1 +1,0 @@
-/usr/bin/c++  -fPIC CMakeFiles/worker.dir/main.cpp.o CMakeFiles/worker.dir/home/dreamer/epcc/vFaaS/include/utils.cpp.o CMakeFiles/worker.dir/home/dreamer/epcc/vFaaS/include/base64.cpp.o -o worker  libvmlib.a -lpthread 

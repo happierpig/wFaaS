@@ -1,7 +1,10 @@
 #include "utils.hpp"
 
-std::string wasmFilePath = "/home/dreamer/epcc/vFaaS/wasmCode/test.wasm";
-const char* functionConfigPath = "/home/dreamer/epcc/vFaaS/wasmCode/func.config";
+// std::string wasmFilePath = "/home/dreamer/epcc/vFaaS/wasmCode/test.wasm";
+// const char* functionConfigPath = "/home/dreamer/epcc/vFaaS/wasmCode/func.config";
+
+std::string wasmFilePath = "/vFaaS/wasmCode/test.wasm";
+const char* functionConfigPath = "/vFaaS/wasmCode/func.config";
 
 namespace util{
 

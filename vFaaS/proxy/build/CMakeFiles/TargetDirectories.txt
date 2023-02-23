@@ -1,3 +1,0 @@
-/home/dreamer/epcc/vFaaS/proxy/build/CMakeFiles/proxy.dir
-/home/dreamer/epcc/vFaaS/proxy/build/CMakeFiles/edit_cache.dir
-/home/dreamer/epcc/vFaaS/proxy/build/CMakeFiles/rebuild_cache.dir

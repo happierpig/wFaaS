@@ -9,7 +9,7 @@ import gevent
 base_url = 'http://127.0.0.1:{}/{}'
 
 
-data = {'function': 'test', 'id': 'thisisatest'}
+data = {'function': 'test', 'id': 'thisisatest', 'isMain': True, 'ip' : "3"}
 r1 = requests.post(base_url.format(18000,'init'), json=data)
 print("r1:",r1)
 print("status_code",r1.status_code)

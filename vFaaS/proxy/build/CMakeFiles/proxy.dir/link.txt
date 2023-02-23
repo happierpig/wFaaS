@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/proxy.dir/proxy.cpp.o CMakeFiles/proxy.dir/home/dreamer/epcc/vFaaS/include/utils.cpp.o CMakeFiles/proxy.dir/home/dreamer/epcc/vFaaS/include/base64.cpp.o -o proxy  -lpthread 
