@@ -38,8 +38,7 @@ class WorkerUnit{
         }
 
     public:
-        WorkerUnit(int _id){
-            id = _id;
+        WorkerUnit(){
             idle = true;
             timeStamp = time(nullptr);
             if(! util::startWorker(&workerPid, &writePipe, &readPipe))
@@ -66,15 +65,29 @@ class WorkerUnit{
             // todo: Maybe need to wait to repead the process.
         }
 
+        void setId(int _id){
+            this->id = _id;
+        }
+
+        int getId(){
+            return this->id;
+        }
+
         void runCode(const unsigned char* inputBuffer, int bufferLength, unsigned char* result, int outputLength){
-            PIPE_COMMAND cmd = PIPE_COMMAND_INPUT;
-            this->sendMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
+            PIPE_COMMAND cmd;
+            printf("[DEBUG]%d try read ready signal\n", this->id);
+            this->readMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
+            if(cmd != PIPE_COMMAND_READY){
+                printf("[DEBUG] Fucking crazy\n");
+                throw std::runtime_error("[WorkerUnit] Fail to test worker ready :(");
+            }
             this->sendMsg(inputBuffer, bufferLength);
+            printf("[DEBUG]%d already send input data\n", this->id);
             while(true){
                 this->readMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
                 if(cmd == PIPE_COMMAND_RETURN){
                     this->readMsg((unsigned char *)result, outputLength);
-                    std::cout << "[PIPE] msg from the other side: " << cmd << "  " << *((int*)result) << std::endl;
+                    std::cout << "[PIPE] Worker " << this->id << " msg from the other side: " << cmd << "  " << *((int*)result) << std::endl;
                     this->timeStamp = time(nullptr); // Update the last running time
                     //debug
                     std::cout << "[WorkerUnit] " << this->id << " running completes." << std::endl;

@@ -17,10 +17,11 @@ class WorkerPool{
         return pool.size();
     }
 
-    WorkerUnit* addWorker(int _id){
-        WorkerUnit* ptr = new WorkerUnit(_id);
+    WorkerUnit* addWorker(){
+        WorkerUnit* ptr = new WorkerUnit();
         ptr->tryOccupy();
         pthread_mutex_lock(&mutex);
+        ptr->setId(pool.size());
         pool.push_back(ptr);
         pthread_mutex_unlock(&mutex);
         return ptr;
@@ -50,8 +51,7 @@ class WorkerPool{
         gettimeofday(&startTime, NULL);
 
         pthread_mutex_lock(&mutex);
-        // debug
-        int _id = getAliveWorker();
+        printf("------Start Dealing------\n");
 
         for(int i = 0;i < getAliveWorker();++i){
             candidate = pool[i];
@@ -69,10 +69,12 @@ class WorkerPool{
         (*duration2) = endTime.tv_usec - startTime.tv_usec;
 
         if(!flag){
-            candidate = addWorker(_id); // Add new WASM Process in it; May cause id bug but no problem
+            candidate = addWorker(); // Add new WASM Process in it; May cause id bug but no problem
             status = "run";
         }
 
+        printf("[WorkerUnit] Worker %d-th Start runing\n", candidate->getId());
+        
         gettimeofday(&startTime, NULL);
 
         candidate->runCode(inputBuffer, sharedConfig.getInputSize(), resultBuffer, sharedConfig.return_size);
