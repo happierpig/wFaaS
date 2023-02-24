@@ -80,6 +80,8 @@ class FunctionUnit:
         self.lock.acquire()
         self.nowTasks[candidateWorker] -= 1
         self.lock.release()
+
+        print("[SessionScheduler] Finish ", requestInfo.data['id'])
         
         requestInfo.result.set(ret)
 
