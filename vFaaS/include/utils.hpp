@@ -24,6 +24,9 @@ typedef int PIPE_COMMAND;
 #define PIPE_COMMAND_STATE_WRITE 4
 #define PIPE_COMMAND_STATE_FOUND 5
 #define PIPE_COMMAND_STATE_NOT_FOUND 6
+#define PIPE_COMMAND_READY 7
+
+#define PIPE_WRITE_FD 10713
 
 extern std::string wasmFilePath;
 extern const char* functionConfigPath;

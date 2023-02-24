@@ -39,7 +39,7 @@ bool startWorker(int *pid, int *infd, int *outfd){
     } else {
         /* Child process. */
         dup2(p1[0], 0); // redirect stdin
-        dup2(p2[1], 10); // 10 is just an arbitrary file descriptor which avoids collision from stdout
+        dup2(p2[1], PIPE_WRITE_FD); // 10 is just an arbitrary file descriptor which avoids collision from stdout
         close(p1[1]);
         close(p2[0]);
         execv(command[0], command);
