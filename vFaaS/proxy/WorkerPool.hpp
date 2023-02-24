@@ -42,9 +42,13 @@ class WorkerPool{
         for(int i=0;i < getAliveWorker();++i) delete pool[i];
     }
 
-    bool dispatch_request(const unsigned char* inputBuffer, unsigned char* resultBuffer){
+    bool dispatch_request(const unsigned char* inputBuffer, unsigned char* resultBuffer, int* duration2, int* duration3){
         WorkerUnit* candidate = nullptr;
         bool flag = false;
+
+        timeval startTime, endTime;
+        gettimeofday(&startTime, NULL);
+
         pthread_mutex_lock(&mutex);
         // debug
         int _id = getAliveWorker();
@@ -59,12 +63,24 @@ class WorkerPool{
             }else std::cout << "Fail" << std::endl; // debug
         }
         pthread_mutex_unlock(&mutex);
+
+        gettimeofday(&endTime, NULL);
+
+        (*duration2) = endTime.tv_usec - startTime.tv_usec;
+
         if(!flag){
             candidate = addWorker(_id); // Add new WASM Process in it; May cause id bug but no problem
             status = "run";
         }
+
+        gettimeofday(&startTime, NULL);
+
         candidate->runCode(inputBuffer, sharedConfig.getInputSize(), resultBuffer, sharedConfig.return_size);
         candidate->setIdle(true);
+
+        gettimeofday(&endTime, NULL);
+
+        (*duration3) = endTime.tv_usec - startTime.tv_usec;
         return flag;
     }
 
@@ -73,15 +89,19 @@ class WorkerPool{
         pthread_mutex_lock(&mutex);
         WorkerUnit* ptr = pool[getAliveWorker() - 1];
         bool flag = ptr->tryOccupy(); // Maybe in running
-        if((!flag) || ptr->checkValid()){
+        if(!flag){ // Fail to lock
+            pthread_mutex_unlock(&mutex);
+            return;
+        }
+        if(ptr->checkValid()){
             ptr->setIdle(true);
             pthread_mutex_unlock(&mutex);
             return;
         }
-        delete ptr;
         pool.pop_back();
         if(getAliveWorker() == 0) status = "idle";
         pthread_mutex_unlock(&mutex);
+        delete ptr; // Avoid longtime mutex
     }
 };
 
