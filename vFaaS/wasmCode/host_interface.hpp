@@ -17,7 +17,7 @@ void set_output(unsigned char* buffer, int bufferLen);
 */
 int read_state(char* key, unsigned char* buffer, int bufferLen);
 
-void write_state(char* key, unsigned char* buffer, int bufferLen);
+int write_state(char* key, unsigned char* buffer, int bufferLen);
 
 uint8_t* wFaaSGetArg(int argIndex, int argLength){
     auto buffer = (unsigned char *)malloc(argLength);
