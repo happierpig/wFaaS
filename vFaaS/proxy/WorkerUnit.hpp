@@ -75,14 +75,14 @@ class WorkerUnit{
 
         void runCode(const unsigned char* inputBuffer, int bufferLength, unsigned char* result, int outputLength){
             PIPE_COMMAND cmd;
-            printf("[DEBUG]%d try read ready signal\n", this->id);
+            printf("[DEBUG]%d try read ready signal", this->id);std::cout<<std::endl;
             this->readMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
             if(cmd != PIPE_COMMAND_READY){
                 printf("[DEBUG] Fucking crazy\n");
                 throw std::runtime_error("[WorkerUnit] Fail to test worker ready :(");
             }
             this->sendMsg(inputBuffer, bufferLength);
-            printf("[DEBUG]%d already send input data\n", this->id);
+            printf("[DEBUG]%d already send input data", this->id);std::cout<<std::endl;
             while(true){
                 this->readMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
                 if(cmd == PIPE_COMMAND_RETURN){
@@ -148,7 +148,7 @@ class WorkerUnit{
                         else success = false;
                     }
                     cmd = ((success == true) ? PIPE_COMMAND_STATE_FOUND : PIPE_COMMAND_STATE_NOT_FOUND);
-                    this->sendMsg((unsigned char *) cmd, sizeof(PIPE_COMMAND));
+                    this->sendMsg((unsigned char *)(&cmd), sizeof(PIPE_COMMAND));
                     delete [] key;
                     delete [] valueBuffer;
                 }
