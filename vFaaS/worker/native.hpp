@@ -30,7 +30,6 @@ static void set_output_native(wasm_exec_env_t exec_env, uint8_t* inBuffer, int32
 static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength){
     PIPE_COMMAND cmd = PIPE_COMMAND_STATE_READ;
     write(10, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
-
     int keyLength = strlen(key) + 1;
     write(10, (unsigned char*)(&keyLength), sizeof(int));
     write(10, (unsigned char*)(&buffLength), sizeof(int));
@@ -68,12 +67,12 @@ static NativeSymbol ns[] = {
         "(*~)"
     },
     {
-        "_Z10read_stateiPhi",
+        "_Z10read_statePcPhi",
         (void *)read_state_native,
         "($*~)i"
     },
     {
-        "_Z10write_stateiPhi",
+        "_Z11write_statePcPhi",
         (void *)write_state_native,
         "($*~)i"
     }
