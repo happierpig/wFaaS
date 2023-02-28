@@ -29,11 +29,11 @@ static void set_output_native(wasm_exec_env_t exec_env, uint8_t* inBuffer, int32
 
 static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength){
     PIPE_COMMAND cmd = PIPE_COMMAND_STATE_READ;
-    write(10, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
+    write(PIPE_WRITE_FD, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
     int keyLength = strlen(key) + 1;
-    write(10, (unsigned char*)(&keyLength), sizeof(int));
-    write(10, (unsigned char*)(&buffLength), sizeof(int));
-    write(10, (unsigned char*) key, keyLength);
+    write(PIPE_WRITE_FD, (unsigned char*)(&keyLength), sizeof(int));
+    write(PIPE_WRITE_FD, (unsigned char*)(&buffLength), sizeof(int));
+    write(PIPE_WRITE_FD, (unsigned char*) key, keyLength);
     util::readBytes(0, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
     if(cmd == PIPE_COMMAND_STATE_NOT_FOUND) return 0;
     else{
@@ -44,13 +44,13 @@ static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffe
 
 static int write_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength){
     PIPE_COMMAND cmd = PIPE_COMMAND_STATE_WRITE;
-    write(10, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
+    write(PIPE_WRITE_FD, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
 
     int keyLength = strlen(key) + 1;
-    write(10, (unsigned char*)(&keyLength), sizeof(int));
-    write(10, (unsigned char*)(&buffLength), sizeof(int));
-    write(10, (unsigned char*)key, keyLength);
-    write(10, (unsigned char*)buffer, buffLength);
+    write(PIPE_WRITE_FD, (unsigned char*)(&keyLength), sizeof(int));
+    write(PIPE_WRITE_FD, (unsigned char*)(&buffLength), sizeof(int));
+    write(PIPE_WRITE_FD, (unsigned char*)key, keyLength);
+    write(PIPE_WRITE_FD, (unsigned char*)buffer, buffLength);
     util::readBytes(0, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
     return ((cmd == PIPE_COMMAND_STATE_FOUND) ? 1 : 0);
 }
