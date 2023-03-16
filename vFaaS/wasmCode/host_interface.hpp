@@ -15,9 +15,9 @@ void set_output(unsigned char* buffer, int bufferLen);
     Use host to connect proxy server.
     Return value: 0 for None in States ; 1 for successfully reading
 */
-int read_state(char* key, unsigned char* buffer, int bufferLen);
+int read_state(char* key, unsigned char* buffer, int bufferLen, int mode);
 
-int write_state(char* key, unsigned char* buffer, int bufferLen);
+int write_state(char* key, unsigned char* buffer, int bufferLen, int mode);
 
 uint8_t* wFaaSGetArg(int argIndex, int argLength){
     auto buffer = (unsigned char *)malloc(argLength);

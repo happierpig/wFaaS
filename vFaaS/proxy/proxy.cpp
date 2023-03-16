@@ -56,6 +56,7 @@ int main(){
         #endif
 
         std::string inputString = decodedJson["input"];
+        std::string requestId = decodedJson["request_id"];
         uint8_t* inputBuffer = new uint8_t[sharedConfig.getInputSize()];
         uint8_t* returnBuffer = new uint8_t[sharedConfig.return_size];
 
@@ -71,9 +72,11 @@ int main(){
 
         util::readFromJson(inputString, inputBuffer, sharedConfig.getInputSize());
 
+        int duration2, duration3;
+
         timeval startTime, endTime;
         gettimeofday(&startTime, NULL);
-        bool newWorker = runner.dispatch_request(inputBuffer, returnBuffer);
+        bool newWorker = runner.dispatch_request(inputBuffer, returnBuffer, requestId, &duration2, &duration3);
         gettimeofday(&endTime, NULL);
 
         #ifdef DEBUG
@@ -84,11 +87,12 @@ int main(){
         json data;
         std::string returnString = "";
         if(sharedConfig.return_size > 0) returnString = util::writeToJson(returnBuffer, sharedConfig.return_size);
-        data["start_time"] = startTime.tv_sec + startTime.tv_usec / 1000000;
-        data["end_time"] = endTime.tv_sec + endTime.tv_usec / 1000000;
-        data["duration"] = (endTime.tv_sec + endTime.tv_usec / 1000000) - (startTime.tv_sec + startTime.tv_usec / 1000000);
+        data["duration"] = (endTime.tv_sec - startTime.tv_sec) * 1000000 + (endTime.tv_usec - startTime.tv_usec);
+        data["durationMutex"] = duration2;
+        data["durationRun"] = duration3;
         data["output"] = returnString;
         data["new_worker"] = newWorker;
+        data["request_id"] = requestId;
 
         delete [] inputBuffer;
         delete [] returnBuffer;
@@ -106,8 +110,16 @@ int main(){
     svr.Post("/state/read", [](const httplib::Request& req, httplib::Response& res) {
         auto decodedJson = json::parse(req.body);
         std::string key = decodedJson["key"];
+        int mode = decodedJson["mode"];
         std::string value = "";
-        bool exists = states.readState(key, value);
+        bool exists;
+        if(mode == 0){
+            // non-uniformity
+            exists = states.readState(key, value);
+        }else if(mode == 1){
+            std::string _request_id = decodedJson["request_id"];
+            exists = states.readStateLock(key, value, _request_id);
+        }
         
         json data;
         data["exists"] = exists;
@@ -122,7 +134,14 @@ int main(){
         auto decodedJson = json::parse(req.body);
         std::string key = decodedJson["key"];
         std::string value = decodedJson["value"];
-        states.writeState(key, value);
+        int mode = decodedJson["mode"];
+        if(mode == 0){
+            // for non-uniformity
+            states.writeState(key, value);
+        }else if(mode == 1){
+            std::string _request_id = decodedJson["request_id"];
+            states.writeStateLock(key, value, _request_id);
+        }
         res.status = 200;
     });
 

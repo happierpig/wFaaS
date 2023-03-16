@@ -73,7 +73,7 @@ class WorkerUnit{
             return this->id;
         }
 
-        void runCode(const unsigned char* inputBuffer, int bufferLength, unsigned char* result, int outputLength){
+        void runCode(const unsigned char* inputBuffer, int bufferLength, unsigned char* result, int outputLength, std::string& request_id){
             PIPE_COMMAND cmd;
             printf("[DEBUG]%d try read ready signal", this->id);std::cout<<std::endl;
             this->readMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
@@ -99,15 +99,28 @@ class WorkerUnit{
                     char * key = new char[keyLength];
                     uint8_t* resultBuffer = new uint8_t[resultLength];
                     this->readMsg((unsigned char*)key, keyLength);
+
+                    /*********/
+                    int mode = 0;
+                    this->readMsg((unsigned char*)(&mode), sizeof(int));
+                    /*********/
+
                     std::string stateKey(key);
                     std::string value = "";
                     bool exists;
                     if(isMain){
-                        exists = states.readState(stateKey, value);
+                        if(mode == 0){
+                            // mode for non-uniformity
+                            exists = states.readState(stateKey, value);
+                        }else if(mode == 1){
+                            exists = states.readStateLock(stateKey, value, request_id);
+                        }
                     }else{
                         json reqData;
                         reqData["key"] = stateKey;
-                        httplib::Client cli(mainIp, 18000);
+                        reqData["mode"] = mode; // Pass responsibility for proxy to deal with the uniformity
+                        if(mode == 1) reqData["request_id"] = request_id;
+                        httplib::Client cli(mainIp, 18000); //todo
                         auto res = cli.Post("/state/read", reqData.dump(), "application/json");
                         if(res && res->status == 200){
                             auto decodedJson = json::parse(res->body);
@@ -134,15 +147,29 @@ class WorkerUnit{
                     uint8_t* valueBuffer = new uint8_t[valueLength];
                     this->readMsg((unsigned char*)key, keyLength);
                     this->readMsg((unsigned char*)valueBuffer, valueLength);
+
+                    /********/
+                    int mode;
+                    this->readMsg((unsigned char*)(&mode), sizeof(int));
+                    /********/
+
                     std::string stateKey(key);
                     std::string stateValue = util::writeToJson(valueBuffer, valueLength);
                     bool success = true;
-                    if(isMain) states.writeState(stateKey, stateValue);
-                    else{
+                    if(isMain){
+                        if(mode == 0){
+                            // for non-uniformity data
+                            states.writeState(stateKey, stateValue);
+                        }else if(mode == 1){
+                            states.writeStateLock(stateKey, stateValue, request_id);
+                        }
+                    }else{
                         json reqData;
                         reqData["key"] = stateKey;
                         reqData["value"] = stateValue;
-                        httplib::Client cli(mainIp, 18000);
+                        reqData["mode"] = mode;
+                        if(mode == 1) reqData["request_id"] = request_id;
+                        httplib::Client cli(mainIp, 18000); //todo MACRO DEF
                         auto res = cli.Post("/state/write", reqData.dump(), "application/json");
                         if(res && res->status == 200) success = true;
                         else success = false;

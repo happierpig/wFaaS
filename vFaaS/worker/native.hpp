@@ -27,13 +27,14 @@ static void set_output_native(wasm_exec_env_t exec_env, uint8_t* inBuffer, int32
     std::copy(inBuffer, inBuffer+inLength, resultBuffer);
 }
 
-static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength){
+static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength, int mode){
     PIPE_COMMAND cmd = PIPE_COMMAND_STATE_READ;
     write(PIPE_WRITE_FD, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
     int keyLength = strlen(key) + 1;
     write(PIPE_WRITE_FD, (unsigned char*)(&keyLength), sizeof(int));
     write(PIPE_WRITE_FD, (unsigned char*)(&buffLength), sizeof(int));
     write(PIPE_WRITE_FD, (unsigned char*) key, keyLength);
+    write(PIPE_WRITE_FD, (unsigned char*)(&mode), sizeof(int));
     util::readBytes(0, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
     if(cmd == PIPE_COMMAND_STATE_NOT_FOUND) return 0;
     else{
@@ -42,15 +43,16 @@ static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffe
     }
 }
 
-static int write_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength){
+static int write_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength, int mode){
     PIPE_COMMAND cmd = PIPE_COMMAND_STATE_WRITE;
     write(PIPE_WRITE_FD, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
-
     int keyLength = strlen(key) + 1;
     write(PIPE_WRITE_FD, (unsigned char*)(&keyLength), sizeof(int));
     write(PIPE_WRITE_FD, (unsigned char*)(&buffLength), sizeof(int));
     write(PIPE_WRITE_FD, (unsigned char*)key, keyLength);
     write(PIPE_WRITE_FD, (unsigned char*)buffer, buffLength);
+    write(PIPE_WRITE_FD, (unsigned char*)(&mode), sizeof(int));
+    
     util::readBytes(0, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
     return ((cmd == PIPE_COMMAND_STATE_FOUND) ? 1 : 0);
 }
@@ -69,11 +71,11 @@ static NativeSymbol ns[] = {
     {
         "_Z10read_statePcPhi",
         (void *)read_state_native,
-        "($*~)i"
+        "($*~i)i"
     },
     {
         "_Z11write_statePcPhi",
         (void *)write_state_native,
-        "($*~)i"
+        "($*~i)i"
     }
 };

@@ -43,7 +43,7 @@ class WorkerPool{
         for(int i=0;i < getAliveWorker();++i) delete pool[i];
     }
 
-    bool dispatch_request(const unsigned char* inputBuffer, unsigned char* resultBuffer, int* duration2, int* duration3){
+    bool dispatch_request(const unsigned char* inputBuffer, unsigned char* resultBuffer, std::string& request_id, int* duration2, int* duration3){
         WorkerUnit* candidate = nullptr;
         bool flag = false;
 
@@ -51,7 +51,7 @@ class WorkerPool{
         gettimeofday(&startTime, NULL);
 
         pthread_mutex_lock(&mutex);
-        printf("------Start Dealing------\n");
+        printf("------Start Dealing------");std::cout<<std::endl;
 
         for(int i = 0;i < getAliveWorker();++i){
             candidate = pool[i];
@@ -73,11 +73,11 @@ class WorkerPool{
             status = "run";
         }
 
-        printf("[WorkerUnit] Worker %d-th Start runing\n", candidate->getId());
-        
+        printf("[WorkerUnit] Worker %d-th Start runing", candidate->getId());std::cout<<std::endl;
+
         gettimeofday(&startTime, NULL);
 
-        candidate->runCode(inputBuffer, sharedConfig.getInputSize(), resultBuffer, sharedConfig.return_size);
+        candidate->runCode(inputBuffer, sharedConfig.getInputSize(), resultBuffer, sharedConfig.return_size, request_id);
         candidate->setIdle(true);
 
         gettimeofday(&endTime, NULL);
