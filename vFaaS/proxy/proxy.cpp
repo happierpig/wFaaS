@@ -88,7 +88,7 @@ int main(){
         std::string returnString = "";
         if(sharedConfig.return_size > 0) returnString = util::writeToJson(returnBuffer, sharedConfig.return_size);
         data["duration"] = (endTime.tv_sec - startTime.tv_sec) * 1000000 + (endTime.tv_usec - startTime.tv_usec);
-        data["durationMutex"] = duration2;
+        data["durationNew"] = duration2;
         data["durationRun"] = duration3;
         data["output"] = returnString;
         data["new_worker"] = newWorker;

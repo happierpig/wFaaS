@@ -13,8 +13,8 @@ class Container:
         container = client.containers.run(image_name,
                                           detach=True,
                                           init=True,
-                                          cpuset_cpus='0-3',
-                                          cpu_quota=20000,
+                                        #   cpuset_cpus='0-3',
+                                          cpu_quota=200000,
                                           #pid_mode='host', # For directly get PID in host side
                                           mem_limit='128m',
                                           ports={'18000/tcp': str(port)},

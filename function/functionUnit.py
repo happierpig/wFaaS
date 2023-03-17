@@ -63,8 +63,11 @@ class FunctionUnit:
                         self.portMan.get(), 'exec', True))
                 self.mainIp = self.get_main_ip()
             else:
+                start = time.time()
                 self.workers.insert(self.workerCount, Container.create(self.dockerClient, self.funcInfo.img_name, 
                         self.portMan.get(), 'exec', False, self.mainIp))
+                end = time.time()
+                print("[Session] Creating Container use ", end-start)
             self.maxTaskLimits.insert(self.workerCount, 10)
             self.nowTasks.insert(self.workerCount, 0)
             self.workers[self.workerCount].init(self.funcInfo.function_name)
@@ -81,7 +84,7 @@ class FunctionUnit:
         self.nowTasks[candidateWorker] -= 1
         self.lock.release()
 
-        print("[SessionScheduler] Finish ", requestInfo.data['id'])
+        print("[SessionScheduler] Finish ", requestInfo.data['request_id'])
         
         requestInfo.result.set(ret)
 

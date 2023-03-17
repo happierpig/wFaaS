@@ -73,16 +73,17 @@ class WorkerUnit{
             return this->id;
         }
 
-        void runCode(const unsigned char* inputBuffer, int bufferLength, unsigned char* result, int outputLength, std::string& request_id){
+        void runCode(const unsigned char* inputBuffer, int bufferLength, unsigned char* result, int outputLength, std::string& request_id, timeval* newTsEnd){
             PIPE_COMMAND cmd;
             printf("[DEBUG]%d try read ready signal", this->id);std::cout<<std::endl;
             this->readMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
+            gettimeofday(newTsEnd, NULL);
             if(cmd != PIPE_COMMAND_READY){
                 printf("[DEBUG] Fucking crazy\n");
                 throw std::runtime_error("[WorkerUnit] Fail to test worker ready :(");
             }
             this->sendMsg(inputBuffer, bufferLength);
-            printf("[DEBUG]%d already send input data", this->id);std::cout<<std::endl;
+            printf("[DEBUG]%d already send input data, and request_id is %s", this->id, request_id);std::cout<<std::endl;
             while(true){
                 this->readMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
                 if(cmd == PIPE_COMMAND_RETURN){

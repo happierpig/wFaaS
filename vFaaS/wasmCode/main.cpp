@@ -30,7 +30,7 @@ int main(){
         for(int j = 0;j < 32;++j){
             matrixC[i][j] = 0;
             for(int k = 0;k < 32;++k){
-                matrixB[i][j] += matrixA[i][k] * matrixB[k][j];
+                matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
             }
         }
     }

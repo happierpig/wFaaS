@@ -38,14 +38,17 @@ class LocalStorage{
     std::map<std::string, std::string> dataBase;
     std::map<std::string, uniqueLock*> lockBase;
     pthread_rwlock_t mutex;
+    pthread_rwlock_t lockMutex;
 
     public:
     LocalStorage(){
         pthread_rwlock_init(&mutex, NULL);
+        pthread_rwlock_init(&lockMutex, NULL);
     }
 
     ~LocalStorage(){
         pthread_rwlock_destroy(&mutex);
+        pthread_rwlock_destroy(&lockMutex);
         for(auto it = lockBase.begin();it != lockBase.end();++it) delete it->second;
     }
 
@@ -68,39 +71,43 @@ class LocalStorage{
     }
 
     bool readStateLock(std::string& key, std::string& value, const std::string& request_id){
-        pthread_rwlock_wrlock(&mutex);
+        pthread_rwlock_rdlock(&lockMutex);
         auto findLockPtr = lockBase.find(key);
         uniqueLock* lockPtr = nullptr;
         if(findLockPtr == lockBase.end()){
-            lockPtr = new uniqueLock();
-            lockBase[key] = lockPtr;
-        }else lockPtr = (*findLockPtr).second;
-        pthread_rwlock_unlock(&mutex);
+            pthread_rwlock_unlock(&lockMutex);
+            return false;
+        }else lockPtr = findLockPtr->second;
+        pthread_rwlock_unlock(&lockMutex);
 
         lockPtr->onLock(request_id);
-
+        pthread_rwlock_rdlock(&mutex);
         auto findPtr = dataBase.find(key);
         if(findPtr == dataBase.end()){
+            pthread_rwlock_unlock(&mutex);
             lockPtr->offLock();
             return false;
         }
         value = (*findPtr).second;
+        pthread_rwlock_unlock(&mutex);
         // Keep holding the lock;
         return true;
     }
 
     void writeStateLock(std::string& key, std::string&value, const std::string& request_id){
-        pthread_rwlock_wrlock(&mutex);
+        pthread_rwlock_wrlock(&lockMutex);
         auto findLockPtr = lockBase.find(key);
         uniqueLock* lockPtr = nullptr;
         if(findLockPtr == lockBase.end()){
             lockPtr = new uniqueLock();
             lockBase[key] = lockPtr;
         }else lockPtr = (*findLockPtr).second;
-        pthread_rwlock_unlock(&mutex);
+        pthread_rwlock_unlock(&lockMutex);
 
         lockPtr->onLock(request_id);
+        pthread_rwlock_wrlock(&mutex);
         dataBase[key] = value;
+        pthread_rwlock_unlock(&mutex);
         lockPtr->offLock();
     }
 };

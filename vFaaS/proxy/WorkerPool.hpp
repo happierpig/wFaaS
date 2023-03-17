@@ -47,8 +47,8 @@ class WorkerPool{
         WorkerUnit* candidate = nullptr;
         bool flag = false;
 
-        timeval startTime, endTime;
-        gettimeofday(&startTime, NULL);
+        timeval startTime1, endTime1, startTime2, endTime2;
+        
 
         pthread_mutex_lock(&mutex);
         printf("------Start Dealing------");std::cout<<std::endl;
@@ -64,25 +64,22 @@ class WorkerPool{
         }
         pthread_mutex_unlock(&mutex);
 
-        gettimeofday(&endTime, NULL);
-
-        (*duration2) = endTime.tv_usec - startTime.tv_usec;
-
+        
+        gettimeofday(&startTime1, NULL);
         if(!flag){
             candidate = addWorker(); // Add new WASM Process in it; May cause id bug but no problem
             status = "run";
         }
-
+        
         printf("[WorkerUnit] Worker %d-th Start runing", candidate->getId());std::cout<<std::endl;
 
-        gettimeofday(&startTime, NULL);
-
-        candidate->runCode(inputBuffer, sharedConfig.getInputSize(), resultBuffer, sharedConfig.return_size, request_id);
+        candidate->runCode(inputBuffer, sharedConfig.getInputSize(), resultBuffer, sharedConfig.return_size, request_id, &endTime1);
         candidate->setIdle(true);
 
-        gettimeofday(&endTime, NULL);
+        gettimeofday(&endTime2, NULL);
 
-        (*duration3) = endTime.tv_usec - startTime.tv_usec;
+        (*duration2) = (endTime1.tv_sec - startTime1.tv_sec) * 1000000 + (endTime1.tv_usec - startTime1.tv_usec);
+        (*duration3) = (endTime2.tv_sec - endTime1.tv_sec) * 1000000 + (endTime2.tv_usec - endTime1.tv_usec);
         return flag;
     }
 
