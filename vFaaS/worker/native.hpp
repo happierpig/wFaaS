@@ -69,12 +69,12 @@ static NativeSymbol ns[] = {
         "(*~)"
     },
     {
-        "_Z10read_statePcPhi",
+        "_Z10read_statePcPhii",
         (void *)read_state_native,
         "($*~i)i"
     },
     {
-        "_Z11write_statePcPhi",
+        "_Z11write_statePcPhii",
         (void *)write_state_native,
         "($*~i)i"
     }
