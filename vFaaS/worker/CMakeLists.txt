@@ -12,7 +12,6 @@ set (WAMR_BUILD_LIBC_WASI 1)
 set (WAMR_BUILD_LIB_PTHREAD 0)
 set (WAMR_DISABLE_HW_BOUND_CHECK 0)
 set (WAMR_BUILD_SIMD 0)
-#set (WAMR_ROOT_DIR /home/dreamer/epcc/wasm-micro-runtime)
 set (WAMR_ROOT_DIR /vFaaS/wasm-micro-runtime)
 
 add_compile_options(-pthread)

@@ -13,6 +13,7 @@ using json = nlohmann::json;
 functionConfiguration sharedConfig;
 extern bool isMain;
 extern std::string mainIp;
+extern int mainPort;
 extern LocalStorage states;
 
 class WorkerUnit{
@@ -73,17 +74,16 @@ class WorkerUnit{
             return this->id;
         }
 
-        void runCode(const unsigned char* inputBuffer, int bufferLength, unsigned char* result, int outputLength, std::string& request_id, timeval* newTsEnd){
+        void runCode(const unsigned char* inputBuffer, int bufferLength, unsigned char* result, int outputLength, std::string& request_id){
             PIPE_COMMAND cmd;
             printf("[DEBUG]%d try read ready signal", this->id);std::cout<<std::endl;
             this->readMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
-            gettimeofday(newTsEnd, NULL);
             if(cmd != PIPE_COMMAND_READY){
                 printf("[DEBUG] Fucking crazy\n");
                 throw std::runtime_error("[WorkerUnit] Fail to test worker ready :(");
             }
             this->sendMsg(inputBuffer, bufferLength);
-            printf("[DEBUG]%d already send input data, and request_id is %s", this->id, request_id);std::cout<<std::endl;
+            printf("[DEBUG]%d already send input data, and request_id is %s", this->id, request_id.c_str());std::cout<<std::endl;
             while(true){
                 this->readMsg((unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
                 if(cmd == PIPE_COMMAND_RETURN){
@@ -94,6 +94,7 @@ class WorkerUnit{
                     std::cout << "[WorkerUnit] " << this->id << " running completes." << std::endl;
                     break;
                 }else if(cmd == PIPE_COMMAND_STATE_READ){
+                    printf("Start READ %s\n", request_id.c_str());
                     int keyLength, resultLength;
                     this->readMsg((unsigned char*)(&keyLength), sizeof(int));
                     this->readMsg((unsigned char*)(&resultLength), sizeof(int));
@@ -121,9 +122,14 @@ class WorkerUnit{
                         reqData["key"] = stateKey;
                         reqData["mode"] = mode; // Pass responsibility for proxy to deal with the uniformity
                         if(mode == 1) reqData["request_id"] = request_id;
-                        httplib::Client cli(mainIp, 18000); //todo
+                        httplib::Client cli("172.17.0.1", mainPort); //todo
+                        cli.set_connection_timeout(30, 0); // 300 milliseconds
+                        cli.set_read_timeout(20, 0); // 5 seconds
+                        cli.set_write_timeout(20, 0);
                         auto res = cli.Post("/state/read", reqData.dump(), "application/json");
+                        printf("Read,id: %s, error info %s\n",request_id.c_str(), to_string(res.error()).c_str());
                         if(res && res->status == 200){
+                            printf("SUCEESS READING\n");
                             auto decodedJson = json::parse(res->body);
                             exists = decodedJson["exists"];
                             value = decodedJson["value"];
@@ -141,6 +147,7 @@ class WorkerUnit{
                     delete [] key;
                     delete [] resultBuffer;
                 }else if(cmd == PIPE_COMMAND_STATE_WRITE){
+                    printf("Start WRITE %s\n", request_id.c_str());
                     int keyLength,valueLength;
                     this->readMsg((unsigned char*)(&keyLength), sizeof(int));
                     this->readMsg((unsigned char*)(&valueLength), sizeof(int));
@@ -170,8 +177,12 @@ class WorkerUnit{
                         reqData["value"] = stateValue;
                         reqData["mode"] = mode;
                         if(mode == 1) reqData["request_id"] = request_id;
-                        httplib::Client cli(mainIp, 18000); //todo MACRO DEF
+                        httplib::Client cli("172.17.0.1", mainPort); //todo MACRO DEF
+                        cli.set_connection_timeout(30, 0); // 300 milliseconds
+                        cli.set_read_timeout(20, 0); // 5 seconds
+                        cli.set_write_timeout(20, 0);
                         auto res = cli.Post("/state/write", reqData.dump(), "application/json");
+                        printf("Write,id: %s, error info %s\n",request_id.c_str(), to_string(res.error()).c_str());
                         if(res && res->status == 200) success = true;
                         else success = false;
                     }
@@ -195,6 +206,10 @@ class WorkerUnit{
             pthread_mutex_lock(&mutex);
             this->idle = flag;
             pthread_mutex_unlock(&mutex);
+        }
+
+        bool getStatus(){
+            return this->idle;
         }
 
         bool checkValid(){

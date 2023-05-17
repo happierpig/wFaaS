@@ -27,7 +27,7 @@ static void set_output_native(wasm_exec_env_t exec_env, uint8_t* inBuffer, int32
     std::copy(inBuffer, inBuffer+inLength, resultBuffer);
 }
 
-static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength, int mode){
+static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength, int32_t mode){
     PIPE_COMMAND cmd = PIPE_COMMAND_STATE_READ;
     write(PIPE_WRITE_FD, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
     int keyLength = strlen(key) + 1;
@@ -43,7 +43,7 @@ static int read_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffe
     }
 }
 
-static int write_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength, int mode){
+static int write_state_native(wasm_exec_env_t exec_env, char* key, uint8_t* buffer, int32_t buffLength, int32_t mode){
     PIPE_COMMAND cmd = PIPE_COMMAND_STATE_WRITE;
     write(PIPE_WRITE_FD, (unsigned char*)(&cmd), sizeof(PIPE_COMMAND));
     int keyLength = strlen(key) + 1;

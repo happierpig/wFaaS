@@ -1,10 +1,7 @@
 #include "utils.hpp"
 
-// std::string wasmFilePath = "/home/dreamer/epcc/vFaaS/wasmCode/test.wasm";
-// const char* functionConfigPath = "/home/dreamer/epcc/vFaaS/wasmCode/func.config";
-
-std::string wasmFilePath = "/vFaaS/wasmCode/test.wasm";
-const char* functionConfigPath = "/vFaaS/wasmCode/func.config";
+std::string wasmFilePath = "/code/test.wasm";
+const char* functionConfigPath = "/code/func.config";
 
 namespace util{
 
@@ -74,7 +71,10 @@ void readBytes(int fd, unsigned char* buffer, int bufferLength){
 void readFromJson(std::string& raw, uint8_t* ptr, int ptrLen){
     std::string decodedString = base64_decode(raw, false);
     int size = decodedString.size();
-    if(size != ptrLen) throw "[Json Util] Unmatched data length.";
+    if(size != ptrLen){
+        std::cout << "[Json Util] Unmatched data length." << std::endl;
+        throw "[Json Util] Unmatched data length.";
+    }
     std::copy(decodedString.data(), decodedString.data() + size, ptr);
 }
 

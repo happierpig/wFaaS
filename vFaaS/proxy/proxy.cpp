@@ -1,4 +1,5 @@
 // #define DEBUG
+#define CPPHTTPLIB_THREAD_POOL_COUNT 128
 
 #include "../include/httplib.h"
 #include "../include/utils.hpp"
@@ -16,10 +17,15 @@ std::string functionName;
 std::string containerID;
 bool isMain = false;
 std::string mainIp = "";
+int mainPort;
+
+bool isOss = false;
 
 
 int main(){
     httplib::Server svr;
+    svr.set_read_timeout(20, 0); // 5 seconds
+    svr.set_write_timeout(20, 0); // 5 seconds
 
     /*
         Handler represents the success of container initializing.
@@ -36,11 +42,20 @@ int main(){
     */
     svr.Post("/init", [](const httplib::Request& req, httplib::Response& res) {
         status = "init";
+        // Allocate the first worker which last for more seconds.
+        runner.pool.push_back(new WorkerUnit(30, 0));
+        
         auto decodedJson = json::parse(req.body);
         functionName = decodedJson["function"];
         containerID = decodedJson["id"];
         isMain = decodedJson["isMain"];
         mainIp = decodedJson["ip"];
+        mainPort = decodedJson["mainPort"];
+        /*
+            For data transfer via Oss.
+        */
+        isOss = decodedJson["isOss"];
+
         status = "ok";
         res.status = 200;
     });
@@ -57,6 +72,7 @@ int main(){
 
         std::string inputString = decodedJson["input"];
         std::string requestId = decodedJson["request_id"];
+        int echo = decodedJson["echo"]; // This is for newly created worker.
         uint8_t* inputBuffer = new uint8_t[sharedConfig.getInputSize()];
         uint8_t* returnBuffer = new uint8_t[sharedConfig.return_size];
 
@@ -76,7 +92,7 @@ int main(){
 
         timeval startTime, endTime;
         gettimeofday(&startTime, NULL);
-        bool newWorker = runner.dispatch_request(inputBuffer, returnBuffer, requestId, &duration2, &duration3);
+        bool newWorker = runner.dispatch_request(inputBuffer, returnBuffer, requestId, &echo);
         gettimeofday(&endTime, NULL);
 
         #ifdef DEBUG
@@ -88,11 +104,10 @@ int main(){
         std::string returnString = "";
         if(sharedConfig.return_size > 0) returnString = util::writeToJson(returnBuffer, sharedConfig.return_size);
         data["duration"] = (endTime.tv_sec - startTime.tv_sec) * 1000000 + (endTime.tv_usec - startTime.tv_usec);
-        data["durationNew"] = duration2;
-        data["durationRun"] = duration3;
         data["output"] = returnString;
         data["new_worker"] = newWorker;
         data["request_id"] = requestId;
+        data["echo"] = echo; // This is for second call.
 
         delete [] inputBuffer;
         delete [] returnBuffer;
@@ -102,12 +117,14 @@ int main(){
         #endif
 
         res.set_content(data.dump(), "application/json");
+        res.status = 200;
     });
 
     /*
         Handler for reading states
     */
     svr.Post("/state/read", [](const httplib::Request& req, httplib::Response& res) {
+        static int x = 0; x = x + 1;
         auto decodedJson = json::parse(req.body);
         std::string key = decodedJson["key"];
         int mode = decodedJson["mode"];
@@ -118,6 +135,7 @@ int main(){
             exists = states.readState(key, value);
         }else if(mode == 1){
             std::string _request_id = decodedJson["request_id"];
+            printf("Read****RequestId: %s*****And the value is: %d\n", _request_id.c_str(),x);
             exists = states.readStateLock(key, value, _request_id);
         }
         
@@ -125,12 +143,14 @@ int main(){
         data["exists"] = exists;
         data["value"] = value;
         res.set_content(data.dump(), "application/json");
+        res.status = 200;
     });
 
     /*
         Handler for modifying states
     */
     svr.Post("/state/write", [](const httplib::Request& req, httplib::Response& res) {
+        static int x = 0; x += 1;
         auto decodedJson = json::parse(req.body);
         std::string key = decodedJson["key"];
         std::string value = decodedJson["value"];
@@ -140,11 +160,12 @@ int main(){
             states.writeState(key, value);
         }else if(mode == 1){
             std::string _request_id = decodedJson["request_id"];
+            printf("Write****RequestId: %s*****And the value is: %d\n", _request_id.c_str(),x);
             states.writeStateLock(key, value, _request_id);
         }
         res.status = 200;
     });
 
-    std::cout << "[Proxy] Start running." << std::endl;
+    printf("[Proxy] Start running at %d pool size.\n", CPPHTTPLIB_THREAD_POOL_COUNT);
     svr.listen("0.0.0.0", 18000);
 }
