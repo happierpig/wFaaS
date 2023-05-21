@@ -10,7 +10,7 @@ cgroup_path = '/sys/fs/cgroup/system.slice/docker-{}.scope'
 class Container:
     # create a new container and return the wrapper (ps: the unit of memory is Mb)
     @classmethod
-    def create(cls, client, image_name, port, attr, isMain, isOss, codeMntPath, mainIp = "", mainPort = 0, concurrency = 3, memory = 128, cpuRes = 0.2):
+    def create(cls, client, image_name, port, attr, isMain, isOss, isRedis, codeMntPath, mainIp = "", mainPort = 0, concurrency = 3, memory = 128, cpuRes = 0.2):
         # We constraint the container's cpu and memory resource by artificially modify cgroup file
         container = client.containers.run(image_name,
                                           detach=True,
@@ -25,7 +25,7 @@ class Container:
                                             Mount(target='/code', source=codeMntPath, type='bind', read_only=True)
                                           ]
                                         )
-        res = cls(container, port, attr, isMain, isOss, mainIp, mainPort, concurrency, memory, cpuRes)
+        res = cls(container, port, attr, isMain, isOss, isRedis, mainIp, mainPort, concurrency, memory, cpuRes)
         res.wait_start()
         return res
 
@@ -36,12 +36,13 @@ class Container:
         container = client.containers.get(container_id)
         return cls(container, port, attr)
 
-    def __init__(self, container, port, attr, isMain, isOss, mainIp, mainPort, concurrency, memory, cpuRes):
+    def __init__(self, container, port, attr, isMain, isOss, isRedis, mainIp, mainPort, concurrency, memory, cpuRes):
         self.container = container
         self.port = port
         self.attr = attr
         self.isMain = isMain
         self.isOss = isOss
+        self.isRedis = isRedis
         self.mainIp = mainIp
         self.mainPort = mainPort
         self.lasttime = time.time()
@@ -121,7 +122,8 @@ class Container:
             'isMain': self.isMain,
             'ip': self.mainIp,
             'mainPort': self.mainPort,
-            'isOss': self.isOss
+            'isOss': self.isOss,
+            'isRedis': self.isRedis
         }
         r = requests.post(base_url.format(self.port, 'init'), json=data)
         self.lasttime = time.time()

@@ -18,9 +18,11 @@ funcInfo = functionUnit.FunctionInfo("test", "test", "test", 20,100,100)
 portMan = portController.PortController(30000,45000)
 dockerClient = docker.from_env()
 
-benchArr = ["centr_avg", "matrix_mul", "data_access", "data_access_linear"]
-closeLoopArr = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90]
-runTime = 60
+# benchArr = ["centr_avg", "matrix_mul", "data_access", "data_access_linear"]
+benchArr = ["data_access"]
+# closeLoopArr = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+closeLoopArr = [1]
+runTime = 30
 
 globalLatencyBuffer = []
 
@@ -51,7 +53,7 @@ for bench in benchArr:
     for closeLoopSize in closeLoopArr:
         globalLatencyBuffer = []
         sessionScheduler = functionUnit.FunctionUnit(dockerClient, portMan, "Dreamer",
-                                                    funcInfo, benchBasePath+"/"+bench, isOss=False, parrelWorker=10)
+                                        funcInfo, benchBasePath+"/"+bench, isOss=False, isRedis=False, parrelWorker=10)
         sessionScheduler.init()
         time.sleep(2)
         # launch 30 new gevent threads with closeLoopTester()
@@ -61,22 +63,23 @@ for bench in benchArr:
         gevent.joinall(threads)
         sessionScheduler.destroy()
 
-        globalLatencyBuffer = globalLatencyBuffer[-2000:]
-        resultFile.write(f"{bench},{closeLoopSize},mem,{(int)(1e6 / np.mean(globalLatencyBuffer) * closeLoopSize)}\n")
+        calculatedQps = int(len(globalLatencyBuffer) / runTime)
+        resultFile.write(f"{bench},{closeLoopSize},redis,{calculatedQps}\n")
         resultFile.flush()
-    for closeLoopSize in closeLoopArr:
-        globalLatencyBuffer = []
-        sessionScheduler = functionUnit.FunctionUnit(dockerClient, portMan, "Dreamer",
-                                                    funcInfo, benchBasePath+"/"+bench, isOss=True, parrelWorker=10)
-        sessionScheduler.init()
-        time.sleep(2)
-        # launch 30 new gevent threads with closeLoopTester()
-        threads = []
-        for i in range(closeLoopSize):
-            threads.append(gevent.spawn(closeLoopTester, sessionScheduler, time.time(), encodedInput, i))
-        gevent.joinall(threads)
-        sessionScheduler.destroy()
+        
+    # for closeLoopSize in closeLoopArr:
+    #     globalLatencyBuffer = []
+    #     sessionScheduler = functionUnit.FunctionUnit(dockerClient, portMan, "Dreamer",
+    #                                                 funcInfo, benchBasePath+"/"+bench, isOss=True, isRedis=False, parrelWorker=10)
+    #     sessionScheduler.init()
+    #     time.sleep(2)
+    #     # launch 30 new gevent threads with closeLoopTester()
+    #     threads = []
+    #     for i in range(closeLoopSize):
+    #         threads.append(gevent.spawn(closeLoopTester, sessionScheduler, time.time(), encodedInput, i))
+    #     gevent.joinall(threads)
+    #     sessionScheduler.destroy()
 
-        globalLatencyBuffer = globalLatencyBuffer[-2000:]
-        resultFile.write(f"{bench},{closeLoopSize},oss,{(int)(1e6 / np.mean(globalLatencyBuffer) * closeLoopSize)}\n")
-        resultFile.flush()
+    #     calculatedQps = int(len(globalLatencyBuffer) / runTime)
+    #     resultFile.write(f"{bench},{closeLoopSize},oss,{calculatedQps}\n")
+    #     resultFile.flush()

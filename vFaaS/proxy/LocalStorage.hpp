@@ -1,12 +1,15 @@
 #ifndef _LOCALSTORAGE_H
 #define _LOCALSTORAGE_H
-
+#define REDISCPP_HEADER_ONLY
+#include <redis-cpp/stream.h>
+#include <redis-cpp/execute.h>
 #include <map>
 #include <pthread.h>
 #include <alibabacloud/oss/OssClient.h>
 using namespace AlibabaCloud::OSS;
 
 extern bool isOss;
+extern bool isRedis;
 
 class uniqueLock{
     private:
@@ -52,6 +55,9 @@ class LocalStorage{
     std::string Endpoint = "oss-cn-shanghai-internal.aliyuncs.com";
     std::string BucketName = "xfaas";
 
+    /* For Redis DB */
+    std::shared_ptr<std::iostream> redisStream;
+
     bool ossRead(std::string& key, std::string& value){
         ClientConfiguration conf;
         OssClient client(Endpoint, AccessKeyId, AccessKeySecret, conf);
@@ -81,9 +87,26 @@ class LocalStorage{
         return outcome.isSuccess();
     }
 
+    bool redisWrite(std::string& key, std::string& value){
+        auto tmpStream = rediscpp::make_stream("172.17.0.1", "6379");
+        auto response = rediscpp::execute(*tmpStream, "set", key, value);
+        return true;
+    }
+
+    bool redisRead(std::string& key, std::string& value){
+        auto tmpStream = rediscpp::make_stream("172.17.0.1", "6379");
+        auto response = rediscpp::execute(*tmpStream, "get", key);
+        value = response.as<std::string>();
+        if(value == "empty") return false;
+        return true;
+    }
+
     public:
     LocalStorage(){
         InitializeSdk();
+        redisStream = rediscpp::make_stream("172.17.0.1", "6379");
+        rediscpp::execute(*redisStream, "set", "xfaas-experiments", "empty");
+        rediscpp::execute(*redisStream, "set", "1-2", "empty");
         pthread_rwlock_init(&mutex, NULL);
         pthread_rwlock_init(&lockMutex, NULL);
     }
@@ -97,7 +120,7 @@ class LocalStorage{
 
     bool readState(std::string& key, std::string& value){
         pthread_rwlock_rdlock(&mutex);
-        if(isOss == false){
+        if(isOss == false && isRedis == false){
             auto findPtr = dataBase.find(key);
             if(findPtr == dataBase.end()){
                 pthread_rwlock_unlock(&mutex);
@@ -105,9 +128,17 @@ class LocalStorage{
             }
             value = (*findPtr).second;
         }else{
-            if(!ossRead(key, value)){
-                pthread_rwlock_unlock(&mutex);
-                return false;
+            if(isOss == true){
+                if(!ossRead(key, value)){
+                    pthread_rwlock_unlock(&mutex);
+                    return false;
+                }
+            }
+            if(isRedis == true){
+                if(!redisRead(key, value)){
+                    pthread_rwlock_unlock(&mutex);
+                    return false;
+                }
             }
         }
         pthread_rwlock_unlock(&mutex);
@@ -116,10 +147,15 @@ class LocalStorage{
     
     void writeState(std::string& key, std::string& value){
         pthread_rwlock_wrlock(&mutex);
-        if(isOss == false){
+        if(isOss == false && isRedis == false){
             dataBase[key] = value;
         }else{
-            ossWrite(key, value);
+            if(isOss == true){
+                ossWrite(key, value);
+            }
+            if(isRedis == true){
+                redisWrite(key, value);
+            }
         }
         pthread_rwlock_unlock(&mutex);
     }
@@ -140,7 +176,7 @@ class LocalStorage{
         printf("%s Try to get on Lock#2\n", request_id.c_str());
         pthread_rwlock_rdlock(&mutex);
         printf("%s get in successfully\n", request_id.c_str());
-        if(isOss == false){
+        if(isOss == false && isRedis == false){
             auto findPtr = dataBase.find(key);
             if(findPtr == dataBase.end()){
                 pthread_rwlock_unlock(&mutex);
@@ -149,13 +185,24 @@ class LocalStorage{
             }
             value = (*findPtr).second;
         }else{
-            if(!ossRead(key, value)){
-                pthread_rwlock_unlock(&mutex);
-                lockPtr->offLock();
-                return false;
+            if(isOss == true){
+                if(!ossRead(key, value)){
+                    pthread_rwlock_unlock(&mutex);
+                    lockPtr->offLock();
+                    return false;
+                }
+                printf("%s Successfully read from OSS\n", request_id.c_str());
             }
-            printf("%s Successfully read from OSS\n", request_id.c_str());
+            if(isRedis == true){
+                if(!redisRead(key, value)){
+                    pthread_rwlock_unlock(&mutex);
+                    lockPtr->offLock();
+                    return false;
+                }
+                printf("%s Successfully read from Redis\n", request_id.c_str());
+            }
         }
+
         pthread_rwlock_unlock(&mutex);
         // Keep holding the lock;
         return true;
@@ -173,11 +220,17 @@ class LocalStorage{
 
         lockPtr->onLock(request_id);
         pthread_rwlock_wrlock(&mutex);
-        if(isOss == false){
+        if(isOss == false && isRedis == false){
             dataBase[key] = value;
         }else{
-            ossWrite(key, value);
-            printf("%s Successfully write to OSS\n", request_id.c_str());
+            if(isOss == true){
+                ossWrite(key, value);
+                printf("%s Successfully write to OSS\n", request_id.c_str());
+            }
+            if(isRedis == true){
+                redisWrite(key, value);
+                printf("%s Successfully write to Redis\n", request_id.c_str());
+            }
         }
         pthread_rwlock_unlock(&mutex);
         lockPtr->offLock();

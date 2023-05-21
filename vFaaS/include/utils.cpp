@@ -72,7 +72,7 @@ void readFromJson(std::string& raw, uint8_t* ptr, int ptrLen){
     std::string decodedString = base64_decode(raw, false);
     int size = decodedString.size();
     if(size != ptrLen){
-        std::cout << "[Json Util] Unmatched data length." << std::endl;
+        std::cout << "[Json Util] Unmatched data length: " << raw << std::endl;
         throw "[Json Util] Unmatched data length.";
     }
     std::copy(decodedString.data(), decodedString.data() + size, ptr);

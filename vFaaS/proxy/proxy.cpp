@@ -20,7 +20,7 @@ std::string mainIp = "";
 int mainPort;
 
 bool isOss = false;
-
+bool isRedis = false;
 
 int main(){
     httplib::Server svr;
@@ -55,7 +55,8 @@ int main(){
             For data transfer via Oss.
         */
         isOss = decodedJson["isOss"];
-
+        isRedis = decodedJson["isRedis"];
+        
         status = "ok";
         res.status = 200;
     });

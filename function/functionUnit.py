@@ -18,7 +18,7 @@ class RequestInfo:
 # functionUnit class abstract single User's Single Function
 # Embedded Session Scheduler
 class FunctionUnit:
-    def __init__(self, dockerClient, portMan, userID, funcInfo, mntPath, isOss=False, parrelWorker=10):
+    def __init__(self, dockerClient, portMan, userID, funcInfo, mntPath, isOss=False, isRedis=False, parrelWorker=10):
         self.userID = userID
         self.funcInfo = funcInfo
         self.dockerClient = dockerClient
@@ -36,6 +36,7 @@ class FunctionUnit:
         self.mainIp = None
         self.mainPort = None
         self.isOss = isOss
+        self.isRedis = isRedis
 
         self.codeMntPath = mntPath
 
@@ -44,7 +45,7 @@ class FunctionUnit:
     # Function for initializing the wasm processes
     def init(self):
         self.workers.append(Container.create(self.dockerClient, self.funcInfo.img_name, self.portMan.get(), 
-                                             'exec', True, isOss=self.isOss, codeMntPath=self.codeMntPath))
+                                             'exec', True, isOss=self.isOss, isRedis=self.isRedis, codeMntPath=self.codeMntPath))
         self.workers[0].init(self.funcInfo.function_name)
         self.mainIp = self.get_main_ip()
         self.mainPort = self.get_main_port()
@@ -76,13 +77,13 @@ class FunctionUnit:
         if self.workerCount < self.maxWorker:
             if self.workerCount == 0:
                 self.workers.insert(self.workerCount, Container.create(self.dockerClient, self.funcInfo.img_name,
-                        self.portMan.get(), 'exec', True, isOss=self.isOss, codeMntPath=self.codeMntPath))
+                        self.portMan.get(), 'exec', True, isOss=self.isOss, isRedis=self.isRedis, codeMntPath=self.codeMntPath))
                 self.mainIp = self.get_main_ip()
                 self.mainPort = self.get_main_port()
             else:
                 start = time.time()
                 self.workers.insert(self.workerCount, Container.create(self.dockerClient, self.funcInfo.img_name, 
-                    self.portMan.get(), 'exec', False, isOss=self.isOss, codeMntPath=self.codeMntPath, mainIp=self.mainIp, mainPort=self.mainPort))
+                    self.portMan.get(), 'exec', False, isOss=self.isOss, isRedis=self.isRedis, codeMntPath=self.codeMntPath, mainIp=self.mainIp, mainPort=self.mainPort))
                 end = time.time()
                 print("[Session] Creating Container use ", end - start)
             self.workers[self.workerCount].init(self.funcInfo.function_name) # Concurrency security guaranteed by executed-once
